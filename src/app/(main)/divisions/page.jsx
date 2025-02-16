@@ -1,18 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 
-import {
-  Box,
-  Stack,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
-  Grid
-} from '@mui/material'
+import { Box, Stack, Button, TextField, Typography, MenuItem, Select, InputLabel, FormControl } from '@mui/material'
 import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -29,12 +18,6 @@ const columns = [
   {
     field: 'unit',
     headerName: 'Unit',
-    width: 150,
-    editable: true
-  },
-  {
-    field: 'division',
-    headerName: 'Division',
     width: 150,
     editable: true
   },
@@ -94,15 +77,14 @@ const CustomToolbar = () => {
 export default function DataGridDemo() {
   const [rows, setRows] = useState([]) // State untuk menyimpan data rows
   const [loading, setLoading] = useState(true) // State untuk loading indicator
-  const [formData, setFormData] = useState({ id: '', name: '', unit: '', division: '' }) // State untuk form
+  const [formData, setFormData] = useState({ id: '', name: '', unit: '' }) // State untuk form
   const [isEdit, setIsEdit] = useState(false) // State untuk mengetahui apakah sedang edit
   const [unit, setUnit] = useState([])
-  const [division, setDivision] = useState([])
 
   useEffect(() => {
     // Fetch data dari JSON Server
     axios
-      .get('http://localhost:3001/positions') // Endpoint JSON Server
+      .get('http://localhost:3001/divisions') // Endpoint JSON Server
       .then(response => {
         setRows(
           response.data.map(row => ({
@@ -126,20 +108,13 @@ export default function DataGridDemo() {
       .catch(error => console.error('Error fetching unit:', error))
   }, [])
 
-  useEffect(() => {
-    axios
-      .get('http://localhost:3001/divisions')
-      .then(response => setDivision(response.data))
-      .catch(error => console.error('Error fetching unit:', error))
-  }, [])
-
   const handleAdd = () => {
     if (!formData.name || !formData.unit) return
 
     const newRow = { ...formData, id: uuidv4() }
 
     axios
-      .post('http://localhost:3001/positions', newRow)
+      .post('http://localhost:3001/divisions', newRow)
       .then(response => {
         setRows(prev => [
           ...prev,
@@ -149,7 +124,7 @@ export default function DataGridDemo() {
             onDelete: handleDelete // Tambahkan fungsi delete
           }
         ])
-        setFormData({ id: '', name: '', unit: '', division: '' }) // Reset form
+        setFormData({ id: '', name: '', unit: '' }) // Reset form
 
         // Tampilkan SweetAlert2 setelah berhasil
         Swal.fire({
@@ -179,12 +154,12 @@ export default function DataGridDemo() {
 
   const handleUpdate = () => {
     axios
-      .put(`http://localhost:3001/positions/${formData.id}`, formData) // Pastikan ID valid
+      .put(`http://localhost:3001/divisions/${formData.id}`, formData) // Pastikan ID valid
       .then(() => {
         setRows(prev =>
           prev.map(row => (row.id === formData.id ? { ...formData, onEdit: handleEdit, onDelete: handleDelete } : row))
         )
-        setFormData({ id: '', name: '', unit: '', division: '' }) // Reset form
+        setFormData({ id: '', name: '', unit: '' }) // Reset form
         setIsEdit(false)
 
         // SweetAlert2 sukses
@@ -222,7 +197,7 @@ export default function DataGridDemo() {
     }).then(result => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:3001/positions/${id}`) // Pastikan ID valid
+          .delete(`http://localhost:3001/divisions/${id}`) // Pastikan ID valid
           .then(() => {
             setRows(prev => prev.filter(row => row.id !== id)) // Hapus row dari state
 
@@ -250,78 +225,72 @@ export default function DataGridDemo() {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      {/* Form */}
-      <Box sx={{ mb: 2 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Unit</InputLabel>
-              <Select value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })}>
-                {unit.map(unit => (
-                  <MenuItem key={unit.name} value={unit.name}>
-                    {unit.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Division</InputLabel>
-              <Select value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })}>
-                {division.map(division => (
-                  <MenuItem key={division.name} value={division.name}>
-                    {division.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label='Division name'
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-            />
-          </Grid>
-          <Grid item xs={12} md={3} display='flex' alignItems='center'>
-            <Button variant='contained' color='primary' size='large' onClick={isEdit ? handleUpdate : handleAdd}>
-              {isEdit ? 'Update' : 'Add'}
-            </Button>
-          </Grid>
-        </Grid>
-      </Box>
+    <>
+      <Typography variant='h3'>Division</Typography>
+      <Box sx={{ width: '100%', mt: 4, p: 3, boxShadow: 3, borderRadius: 1, bgcolor: 'white' }}>
+        {/* Form */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <FormControl fullWidth>
+            <InputLabel>Unit</InputLabel>
+            <Select
+              label='Unit'
+              value={formData.unit}
+              onChange={e => setFormData({ ...formData, unit: e.target.value })}
+            >
+              {unit.map(unit => (
+                <MenuItem key={unit.name} value={unit.name}>
+                  {unit.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            label='Division name'
+            value={formData.name}
+            onChange={e => setFormData({ ...formData, name: e.target.value })}
+          />
 
-      {/* DataGrid */}
-      <Box sx={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 5
+          {isEdit ? (
+            <Button variant='contained' color='primary' onClick={handleUpdate}>
+              Update
+            </Button>
+          ) : (
+            <Button variant='contained' color='primary' onClick={handleAdd}>
+              Add
+            </Button>
+          )}
+        </Box>
+
+        {/* DataGrid */}
+        <Box sx={{ height: 400, width: '100%' }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 5
+                }
+              },
+              filter: {
+                filterModel: {
+                  items: []
+                }
               }
-            },
-            filter: {
-              filterModel: {
-                items: []
+            }}
+            pageSizeOptions={[10]}
+            disableRowSelectionOnClick
+            slots={{ toolbar: CustomToolbar }}
+            slotProps={{
+              toolbar: {
+                showQuickFilter: true
               }
-            }
-          }}
-          pageSizeOptions={[10]}
-          disableRowSelectionOnClick
-          slots={{ toolbar: CustomToolbar }}
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true
-            }
-          }}
-        />
+            }}
+          />
+        </Box>
       </Box>
-    </Box>
+    </>
   )
 }

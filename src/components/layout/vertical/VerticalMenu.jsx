@@ -61,8 +61,16 @@ const VerticalMenu = ({ scrollMenu }) => {
         renderExpandedMenuItemIcon={{ icon: <i className='tabler-circle text-xs' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <MenuItem href='/home' icon={<i className='tabler-smart-home' />}>
+        <MenuItem activeUrls={['/home']} pathname={pathname} href='/home' icon={<i className='tabler-smart-home' />}>
           Home
+        </MenuItem>
+        <MenuItem
+          activeUrls={['/roles', '/roles/*']}
+          pathname={pathname} // Current path from router or context
+          href='/roles'
+          icon={<i className='tabler-rosette' />}
+        >
+          Roles
         </MenuItem>
 
         <MenuItem
@@ -72,24 +80,39 @@ const VerticalMenu = ({ scrollMenu }) => {
           href='/users'
           icon={<i className='tabler-users' />}
         ></MenuItem>
-        <MenuItem
-          prefix='Positions'
-          activeUrls={['/positions', '/positions/*']}
-          pathname={pathname} // Current path from router or context
-          href='/positions'
-          icon={<i className='tabler-users' />}
-        ></MenuItem>
-        <MenuItem
-          prefix='Unit & Division'
-          activeUrls={['/unit', '/unit/*']}
-          pathname={pathname} // Current path from router or context
-          href='/unit'
-          icon={<i className='tabler-users' />}
-        ></MenuItem>
 
-        <SubMenu label='Menu Level' icon={<i className='tabler-users' />}>
-          <MenuItem>Menu Level 2.1</MenuItem>
-        </SubMenu>
+        <MenuItem
+          activeUrls={['/lha', '/lha/*']}
+          pathname={pathname} // Current path from router or context
+          href='/lha'
+          icon={<i className='tabler-clipboard-text' />}
+        >
+          LHA
+        </MenuItem>
+        <MenuItem
+          activeUrls={['/findings', '/findings/*']}
+          pathname={pathname} // Current path from router or context
+          href='/findings'
+          icon={<i className='tabler-building' />}
+        >
+          Findings
+        </MenuItem>
+        <MenuItem
+          activeUrls={['/report-findings']}
+          pathname={pathname} // Current path from router or context
+          href='/report-findings'
+          icon={<i className='tabler-clipboard-text' />}
+        >
+          Report Findings
+        </MenuItem>
+        <MenuItem
+          activeUrls={['/audit-trace', '/audit-trace/*']}
+          pathname={pathname} // Current path from router or context
+          href='/audit-trace'
+          icon={<i className='tabler-devices-check' />}
+        >
+          Audit Trace
+        </MenuItem>
       </Menu>
     </ScrollWrapper>
   )

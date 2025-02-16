@@ -1,45 +1,68 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 
-import { Box, Button, Chip, Stack, TextField, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  Stack,
+  TextField,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  CardContent,
+  Card,
+  CardHeader
+} from '@mui/material'
+import Grid from '@mui/material/Grid2'
 import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import { v4 as uuidv4 } from 'uuid' // Import SweetAlert2
 
+import CustomIconButton from '@core/components/mui/IconButton'
+
+const units = ['IT', 'HR', 'Finance']
+const divisions = ['Development', 'Operations', 'Support']
+const positions = ['Manager', 'Staff', 'Intern']
+const statuses = ['Active', 'Inactive']
+const roles = ['Group Role 1', 'Group Role 2']
+
 const columns = [
   {
-    field: 'firstName',
-    headerName: 'First name',
-    width: 150,
-    editable: true
+    field: 'name',
+    headerName: 'Name'
   },
   {
-    field: 'lastName',
-    headerName: 'Last name',
-    width: 150,
-    editable: true
+    field: 'nip',
+    headerName: 'NIP'
   },
   {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 110,
-    editable: true
+    field: 'unit',
+    headerName: 'Unit'
   },
   {
-    field: 'badge',
-    headerName: 'Badge',
-    width: 160,
-    renderCell: params => {
-      const age = params.row?.age
-
-      if (age !== undefined && age !== null) {
-        return age > 44 ? <Chip label='Primary' color='primary' /> : <Chip label='Default' color='default' />
-      }
-
-      return <Chip label='No Data' color='default' />
-    }
+    field: 'division',
+    headerName: 'Division'
+  },
+  {
+    field: 'position',
+    headerName: 'Position'
+  },
+  {
+    field: 'username',
+    headerName: 'Username'
+  },
+  {
+    field: 'role',
+    headerName: 'Role'
+  },
+  {
+    field: 'status',
+    headerName: 'Status'
   },
 
   {
@@ -48,12 +71,17 @@ const columns = [
     width: 150,
     renderCell: params => (
       <Stack direction='row' spacing={1}>
-        <Button variant='contained' color='primary' size='small' onClick={() => params.row.onEdit(params.row)}>
-          Edit
-        </Button>
-        <Button variant='contained' color='error' size='small' onClick={() => params.row.onDelete(params.row.id)}>
-          Delete
-        </Button>
+        <CustomIconButton color='secondary' variant='text' size='small' onClick={() => params.row.onEdit(params.row)}>
+          <i className='tabler-pencil' />
+        </CustomIconButton>
+        <CustomIconButton
+          color='secondary'
+          variant='text'
+          size='small'
+          onClick={() => params.row.onDelete(params.row.id)}
+        >
+          <i className='tabler-trash' />
+        </CustomIconButton>
       </Stack>
     )
   }
@@ -67,29 +95,18 @@ const CustomToolbar = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '8px 16px',
-        backgroundColor: '#f5f5f5',
+
         borderBottom: '1px solid #ddd'
       }}
     >
       {/* Title Section */}
-      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold', color: '#333' }}>
+      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold' }}>
         Users
       </Typography>
 
       {/* Quick Filter Section */}
       <Stack direction='row' alignItems='center' spacing={1}>
-        <GridToolbarQuickFilter
-          placeholder='Search...'
-          sx={{
-            '& input': {
-              padding: '6px 8px',
-              fontSize: '14px',
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              border: '1px solid #ccc'
-            }
-          }}
-        />
+        <GridToolbarQuickFilter placeholder='Search...' />
       </Stack>
     </Box>
   )
@@ -100,6 +117,7 @@ export default function DataGridDemo() {
   const [loading, setLoading] = useState(true) // State untuk loading indicator
   const [formData, setFormData] = useState({ id: '', firstName: '', lastName: '', age: '' }) // State untuk form
   const [isEdit, setIsEdit] = useState(false) // State untuk mengetahui apakah sedang edit
+  const [selectedRoles, setSelectedRoles] = useState([])
 
   useEffect(() => {
     // Fetch data dari JSON Server
@@ -238,64 +256,127 @@ export default function DataGridDemo() {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      {/* Form */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
-          label='First Name'
-          value={formData.firstName}
-          onChange={e => setFormData({ ...formData, firstName: e.target.value })}
-        />
-        <TextField
-          label='Last Name'
-          value={formData.lastName}
-          onChange={e => setFormData({ ...formData, lastName: e.target.value })}
-        />
-        <TextField
-          label='Age'
-          type='number'
-          value={formData.age}
-          onChange={e => setFormData({ ...formData, age: e.target.value })}
-        />
-        {isEdit ? (
-          <Button variant='contained' color='primary' onClick={handleUpdate}>
-            Update
-          </Button>
-        ) : (
-          <Button variant='contained' color='primary' onClick={handleAdd}>
-            Add
-          </Button>
-        )}
-      </Box>
+    <>
+      <Typography variant='h3' gutterBottom>
+        Users
+      </Typography>
 
-      {/* DataGrid */}
-      <Box sx={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 5
-              }
-            },
-            filter: {
-              filterModel: {
-                items: []
-              }
-            }
-          }}
-          pageSizeOptions={[10]}
-          disableRowSelectionOnClick
-          slots={{ toolbar: CustomToolbar }}
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true
-            }
-          }}
-        />
-      </Box>
-    </Box>
+      <Card>
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid size={3}>
+              <TextField label='Name' fullWidth required margin='normal' />
+              <TextField label='NIP' fullWidth required margin='normal' />
+              <Button sx={{ mt: 2 }} type='submit' variant='contained' color='primary' fullWidth disabled={loading}>
+                {loading ? 'Submitting...' : 'Tambah'}
+              </Button>
+            </Grid>
+            <Grid size={3}>
+              <TextField label='Password' fullWidth required margin='normal' />
+
+              <FormControl fullWidth margin='normal'>
+                <InputLabel>Unit</InputLabel>
+                <Select label='Unit'>
+                  {units.map(unit => (
+                    <MenuItem key={unit} value={unit}>
+                      {unit}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={3}>
+              <FormControl fullWidth margin='normal'>
+                <InputLabel>Division</InputLabel>
+                <Select label='Division'>
+                  {divisions.map(division => (
+                    <MenuItem key={division} value={division}>
+                      {division}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth margin='normal'>
+                <InputLabel>Role</InputLabel>
+                <Select
+                  label='Role'
+                  multiple
+                  value={selectedRoles} // Gunakan state untuk menyimpan nilai terpilih
+                  onChange={event => setSelectedRoles(event.target.value)} // Perbarui state saat pilihan berubah
+                  renderValue={selected => selected.join(', ')} // Menampilkan pilihan dalam bentuk teks
+                >
+                  {roles.map(role => (
+                    <MenuItem key={role} value={role}>
+                      <Checkbox checked={selectedRoles.indexOf(role) > -1} /> {/* Tambahkan Checkbox */}
+                      {role}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={3}>
+              <FormControl fullWidth margin='normal'>
+                <InputLabel>Position</InputLabel>
+                <Select label='Position'>
+                  {positions.map(position => (
+                    <MenuItem key={position} value={position}>
+                      {position}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth margin='normal'>
+                <InputLabel>Status</InputLabel>
+                <Select label='Status'>
+                  {statuses.map(status => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid size={12}>
+          <Card>
+            <CardContent>
+              {/* DataGrid */}
+              <Box sx={{ height: 400, width: '100%' }}>
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  loading={loading}
+                  initialState={{
+                    pagination: {
+                      paginationModel: {
+                        pageSize: 5
+                      }
+                    },
+                    filter: {
+                      filterModel: {
+                        items: []
+                      }
+                    }
+                  }}
+                  pageSizeOptions={[10]}
+                  disableRowSelectionOnClick
+                  slots={{ toolbar: CustomToolbar }}
+                  slotProps={{
+                    toolbar: {
+                      showQuickFilter: true
+                    }
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </>
   )
 }
