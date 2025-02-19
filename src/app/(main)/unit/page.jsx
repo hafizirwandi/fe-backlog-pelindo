@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 
-import { Box, Stack, Button, TextField, Typography, MenuItem, Select, InputLabel, FormControl } from '@mui/material'
+import { Box, Button, CardContent, Chip, Stack, TextField, Typography, Card } from '@mui/material'
 import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -10,17 +10,11 @@ import { v4 as uuidv4 } from 'uuid' // Import SweetAlert2
 const columns = [
   {
     field: 'name',
-    headerName: 'Division name',
+    headerName: 'Unit name',
     width: 150,
     editable: true
   },
 
-  {
-    field: 'unit',
-    headerName: 'Unit',
-    width: 150,
-    editable: true
-  },
   {
     field: 'actions',
     headerName: 'Actions',
@@ -46,29 +40,18 @@ const CustomToolbar = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '8px 16px',
-        backgroundColor: '#f5f5f5',
+
         borderBottom: '1px solid #ddd'
       }}
     >
       {/* Title Section */}
-      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold', color: '#333' }}>
-        divisions
+      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold' }}>
+        Unit
       </Typography>
 
       {/* Quick Filter Section */}
       <Stack direction='row' alignItems='center' spacing={1}>
-        <GridToolbarQuickFilter
-          placeholder='Search...'
-          sx={{
-            '& input': {
-              padding: '6px 8px',
-              fontSize: '14px',
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              border: '1px solid #ccc'
-            }
-          }}
-        />
+        <GridToolbarQuickFilter placeholder='Search...' />
       </Stack>
     </Box>
   )
@@ -77,14 +60,13 @@ const CustomToolbar = () => {
 export default function DataGridDemo() {
   const [rows, setRows] = useState([]) // State untuk menyimpan data rows
   const [loading, setLoading] = useState(true) // State untuk loading indicator
-  const [formData, setFormData] = useState({ id: '', name: '', unit: '' }) // State untuk form
+  const [formData, setFormData] = useState({ id: '', name: '' }) // State untuk form
   const [isEdit, setIsEdit] = useState(false) // State untuk mengetahui apakah sedang edit
-  const [unit, setUnit] = useState([])
 
   useEffect(() => {
     // Fetch data dari JSON Server
     axios
-      .get('http://localhost:3001/divisions') // Endpoint JSON Server
+      .get('http://localhost:3001/units') // Endpoint JSON Server
       .then(response => {
         setRows(
           response.data.map(row => ({
@@ -101,20 +83,13 @@ export default function DataGridDemo() {
       })
   }, [])
 
-  useEffect(() => {
-    axios
-      .get('http://localhost:3001/units')
-      .then(response => setUnit(response.data))
-      .catch(error => console.error('Error fetching unit:', error))
-  }, [])
-
   const handleAdd = () => {
-    if (!formData.name || !formData.unit) return
+    if (!formData.name) return
 
     const newRow = { ...formData, id: uuidv4() }
 
     axios
-      .post('http://localhost:3001/divisions', newRow)
+      .post('http://localhost:3001/units', newRow)
       .then(response => {
         setRows(prev => [
           ...prev,
@@ -124,7 +99,7 @@ export default function DataGridDemo() {
             onDelete: handleDelete // Tambahkan fungsi delete
           }
         ])
-        setFormData({ id: '', name: '', unit: '' }) // Reset form
+        setFormData({ id: '', name: '' }) // Reset form
 
         // Tampilkan SweetAlert2 setelah berhasil
         Swal.fire({
@@ -154,12 +129,12 @@ export default function DataGridDemo() {
 
   const handleUpdate = () => {
     axios
-      .put(`http://localhost:3001/divisions/${formData.id}`, formData) // Pastikan ID valid
+      .put(`http://localhost:3001/units/${formData.id}`, formData) // Pastikan ID valid
       .then(() => {
         setRows(prev =>
           prev.map(row => (row.id === formData.id ? { ...formData, onEdit: handleEdit, onDelete: handleDelete } : row))
         )
-        setFormData({ id: '', name: '', unit: '' }) // Reset form
+        setFormData({ id: '', name: '' }) // Reset form
         setIsEdit(false)
 
         // SweetAlert2 sukses
@@ -197,7 +172,7 @@ export default function DataGridDemo() {
     }).then(result => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:3001/divisions/${id}`) // Pastikan ID valid
+          .delete(`http://localhost:3001/units/${id}`) // Pastikan ID valid
           .then(() => {
             setRows(prev => prev.filter(row => row.id !== id)) // Hapus row dari state
 
@@ -226,71 +201,60 @@ export default function DataGridDemo() {
 
   return (
     <>
-      <Typography variant='h3'>Division</Typography>
-      <Box sx={{ width: '100%', mt: 4, p: 3, boxShadow: 3, borderRadius: 1, bgcolor: 'white' }}>
-        {/* Form */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <FormControl fullWidth>
-            <InputLabel>Unit</InputLabel>
-            <Select
-              label='Unit'
-              value={formData.unit}
-              onChange={e => setFormData({ ...formData, unit: e.target.value })}
-            >
-              {unit.map(unit => (
-                <MenuItem key={unit.name} value={unit.name}>
-                  {unit.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            fullWidth
-            label='Division name'
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-          />
+      <Typography variant='h3'>Unit</Typography>
+      <Card>
+        <CardContent>
+          {/* Form */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <TextField
+              size='small'
+              label='Nama'
+              fullWidth
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+            />
 
-          {isEdit ? (
-            <Button variant='contained' color='primary' onClick={handleUpdate}>
-              Update
-            </Button>
-          ) : (
-            <Button variant='contained' color='primary' onClick={handleAdd}>
-              Add
-            </Button>
-          )}
-        </Box>
+            {isEdit ? (
+              <Button size='small' variant='contained' color='primary' onClick={handleUpdate}>
+                Update
+              </Button>
+            ) : (
+              <Button size='small' variant='contained' color='primary' onClick={handleAdd}>
+                Add
+              </Button>
+            )}
+          </Box>
 
-        {/* DataGrid */}
-        <Box sx={{ height: 400, width: '100%' }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={loading}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 5
+          {/* DataGrid */}
+          <Box>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              loading={loading}
+              initialState={{
+                pagination: {
+                  paginationModel: {
+                    pageSize: 5
+                  }
+                },
+                filter: {
+                  filterModel: {
+                    items: []
+                  }
                 }
-              },
-              filter: {
-                filterModel: {
-                  items: []
+              }}
+              pageSizeOptions={[10]}
+              disableRowSelectionOnClick
+              slots={{ toolbar: CustomToolbar }}
+              slotProps={{
+                toolbar: {
+                  showQuickFilter: true
                 }
-              }
-            }}
-            pageSizeOptions={[10]}
-            disableRowSelectionOnClick
-            slots={{ toolbar: CustomToolbar }}
-            slotProps={{
-              toolbar: {
-                showQuickFilter: true
-              }
-            }}
-          />
-        </Box>
-      </Box>
+              }}
+            />
+          </Box>
+        </CardContent>
+      </Card>
     </>
   )
 }

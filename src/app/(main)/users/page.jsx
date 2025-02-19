@@ -15,7 +15,14 @@ import {
   Checkbox,
   CardContent,
   Card,
-  CardHeader
+  CardHeader,
+  Autocomplete,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell,
+  Table,
+  TableContainer
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
@@ -255,6 +262,56 @@ export default function DataGridDemo() {
     })
   }
 
+  const [permissions, setPermissions] = useState([
+    { id: 'user-list', label: 'User List' },
+    { id: 'user-edit', label: 'User Edit' },
+    { id: 'user-delete', label: 'User Delete' },
+    { id: 'user-create', label: 'User Create' },
+    { id: 'post-list', label: 'Post List' },
+    { id: 'post-edit', label: 'Post Edit' },
+    { id: 'post-delete', label: 'Post Delete' },
+    { id: 'post-create', label: 'Post Create' },
+    { id: 'comment-list', label: 'Comment List' },
+    { id: 'comment-edit', label: 'Comment Edit' },
+    { id: 'comment-delete', label: 'Comment Delete' },
+    { id: 'comment-create', label: 'Comment Create' },
+    { id: 'category-list', label: 'Category List' },
+    { id: 'category-edit', label: 'Category Edit' },
+    { id: 'category-delete', label: 'Category Delete' },
+    { id: 'category-create', label: 'Category Create' },
+    { id: 'tag-list', label: 'Tag List' },
+    { id: 'tag-edit', label: 'Tag Edit' },
+    { id: 'tag-delete', label: 'Tag Delete' },
+    { id: 'tag-create', label: 'Tag Create' },
+    { id: 'role-list', label: 'Role List' },
+    { id: 'role-edit', label: 'Role Edit' },
+    { id: 'role-delete', label: 'Role Delete' },
+    { id: 'role-create', label: 'Role Create' },
+    { id: 'permission-list', label: 'Permission List' },
+    { id: 'permission-edit', label: 'Permission Edit' },
+    { id: 'permission-delete', label: 'Permission Delete' },
+    { id: 'permission-create', label: 'Permission Create' },
+    { id: 'report-view', label: 'Report View' },
+    { id: 'report-export', label: 'Report Export' },
+    { id: 'settings-view', label: 'Settings View' },
+    { id: 'settings-update', label: 'Settings Update' },
+    { id: 'user-activate', label: 'User Activate' },
+    { id: 'user-deactivate', label: 'User Deactivate' }
+  ])
+
+  // Default selected berdasarkan `checked: true`
+  const defaultSelected = permissions.filter(p => p.checked)
+
+  const [selectedPermissions, setSelectedPermissions] = useState(defaultSelected)
+
+  const [users, setUsers] = useState([
+    { id: 1, nama: 'John Doe', nip: '123456', role: 'Admin', status: 'Active' },
+    { id: 2, nama: 'Jane Smith', nip: '789012', role: 'Editor', status: 'Inactive' },
+    { id: 3, nama: 'Michael Johnson', nip: '345678', role: 'User', status: 'Active' },
+    { id: 4, nama: 'Alice Brown', nip: '901234', role: 'Moderator', status: 'Active' },
+    { id: 5, nama: 'Robert Williams', nip: '567890', role: 'Admin', status: 'Inactive' }
+  ])
+
   return (
     <>
       <Typography variant='h3' gutterBottom>
@@ -265,16 +322,24 @@ export default function DataGridDemo() {
         <CardContent>
           <Grid container spacing={2}>
             <Grid size={3}>
-              <TextField label='Name' fullWidth required margin='normal' />
-              <TextField label='NIP' fullWidth required margin='normal' />
-              <Button sx={{ mt: 2 }} type='submit' variant='contained' color='primary' fullWidth disabled={loading}>
+              <TextField size='small' label='Name' fullWidth required margin='normal' />
+              <TextField size='small' label='NIP' fullWidth required margin='normal' />
+              <Button
+                size='small'
+                sx={{ mt: 2 }}
+                type='submit'
+                variant='contained'
+                color='primary'
+                fullWidth
+                disabled={loading}
+              >
                 {loading ? 'Submitting...' : 'Tambah'}
               </Button>
             </Grid>
             <Grid size={3}>
-              <TextField label='Password' fullWidth required margin='normal' />
+              <TextField size='small' label='Password' fullWidth required margin='normal' />
 
-              <FormControl fullWidth margin='normal'>
+              <FormControl size='small' fullWidth margin='normal'>
                 <InputLabel>Unit</InputLabel>
                 <Select label='Unit'>
                   {units.map(unit => (
@@ -286,7 +351,7 @@ export default function DataGridDemo() {
               </FormControl>
             </Grid>
             <Grid size={3}>
-              <FormControl fullWidth margin='normal'>
+              <FormControl size='small' fullWidth margin='normal'>
                 <InputLabel>Division</InputLabel>
                 <Select label='Division'>
                   {divisions.map(division => (
@@ -297,7 +362,7 @@ export default function DataGridDemo() {
                 </Select>
               </FormControl>
 
-              <FormControl fullWidth margin='normal'>
+              <FormControl size='small' fullWidth margin='normal'>
                 <InputLabel>Role</InputLabel>
                 <Select
                   label='Role'
@@ -316,7 +381,7 @@ export default function DataGridDemo() {
               </FormControl>
             </Grid>
             <Grid size={3}>
-              <FormControl fullWidth margin='normal'>
+              <FormControl size='small' fullWidth margin='normal'>
                 <InputLabel>Position</InputLabel>
                 <Select label='Position'>
                   {positions.map(position => (
@@ -327,7 +392,7 @@ export default function DataGridDemo() {
                 </Select>
               </FormControl>
 
-              <FormControl fullWidth margin='normal'>
+              <FormControl size='small' fullWidth margin='normal'>
                 <InputLabel>Status</InputLabel>
                 <Select label='Status'>
                   {statuses.map(status => (
@@ -373,6 +438,67 @@ export default function DataGridDemo() {
                   }}
                 />
               </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid size={7}>
+          <Card>
+            <CardHeader title='Search Users Fitur'></CardHeader>
+            <CardContent>
+              <Autocomplete
+                size='small'
+                options={permissions}
+                getOptionLabel={option => option.label}
+                value={selectedPermissions}
+                onChange={(event, newValue) => {
+                  setSelectedPermissions(newValue)
+                }}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip {...getTagProps({ index })} key={option.id} label={option.label} />
+                  ))
+                }
+                renderInput={params => <TextField {...params} label='Select Permissions' variant='outlined' />}
+              />
+
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>
+                        <strong>Nama</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>NIP</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Role</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Status</strong>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map(user => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.nama}</TableCell>
+                        <TableCell>{user.nip}</TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={user.status}
+                            color={user.status === 'Active' ? 'success' : 'error'}
+                            variant='outlined'
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </CardContent>
           </Card>
         </Grid>

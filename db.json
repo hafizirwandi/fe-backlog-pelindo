@@ -51,7 +51,11 @@
     },
     {
       "id": "2",
-      "name": "Cabang"
+      "name": "Cabang 1"
+    },
+    {
+      "id": "3",
+      "name": "Cabang 2"
     }
   ],
   "divisions": [
@@ -66,7 +70,7 @@
       "id": "1",
       "name": "Position 1",
       "unit": "Regional",
-      "division": "SS"
+      "division": "IT"
     }
   ],
   "findigs": [

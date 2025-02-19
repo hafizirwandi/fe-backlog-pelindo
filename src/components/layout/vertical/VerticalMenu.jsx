@@ -72,7 +72,6 @@ const VerticalMenu = ({ scrollMenu }) => {
         >
           Roles
         </MenuItem>
-
         <MenuItem
           prefix='Users'
           activeUrls={['/users', '/users/*']}
@@ -80,22 +79,56 @@ const VerticalMenu = ({ scrollMenu }) => {
           href='/users'
           icon={<i className='tabler-users' />}
         ></MenuItem>
+        <SubMenu label='Organisasi' icon={<i className='tabler-affiliate' />}>
+          <MenuItem
+            prefix='Unit'
+            activeUrls={['/unit']}
+            pathname={pathname} // Current path from router or context
+            href='/unit'
+          ></MenuItem>
+          <MenuItem
+            prefix='Divisi'
+            activeUrls={['/divisi']}
+            pathname={pathname} // Current path from router or context
+            href='/divisi'
+          ></MenuItem>
+          <MenuItem
+            prefix='Departemen'
+            activeUrls={['/departemen']}
+            pathname={pathname} // Current path from router or context
+            href='/departemen'
+          ></MenuItem>
+          <MenuItem
+            prefix='Jabatan'
+            activeUrls={['/jabatan']}
+            pathname={pathname} // Current path from router or context
+            href='/jabatan'
+          ></MenuItem>
+        </SubMenu>
+        <SubMenu label='LHA' icon={<i className='tabler-clipboard-text' />}>
+          <MenuItem
+            activeUrls={['/lha', '/lha/detail']}
+            pathname={pathname} // Current path from router or context
+            href='/lha'
+          >
+            List LHA
+          </MenuItem>
+          <MenuItem
+            activeUrls={['/lha/riwayat']}
+            pathname={pathname} // Current path from router or context
+            href='/lha/riwayat'
+          >
+            Riwayat
+          </MenuItem>
+        </SubMenu>
 
         <MenuItem
-          activeUrls={['/lha', '/lha/*']}
+          activeUrls={['/temuan', '/temuan/*']}
           pathname={pathname} // Current path from router or context
-          href='/lha'
-          icon={<i className='tabler-clipboard-text' />}
-        >
-          LHA
-        </MenuItem>
-        <MenuItem
-          activeUrls={['/findings', '/findings/*']}
-          pathname={pathname} // Current path from router or context
-          href='/findings'
+          href='/temuan'
           icon={<i className='tabler-building' />}
         >
-          Findings
+          Temuan
         </MenuItem>
         <MenuItem
           activeUrls={['/report-findings']}

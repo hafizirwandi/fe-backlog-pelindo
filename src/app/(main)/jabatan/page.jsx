@@ -11,8 +11,11 @@ import {
   Select,
   InputLabel,
   FormControl,
-  Grid
+  CardContent,
+  Card
 } from '@mui/material'
+
+import Grid from '@mui/material/Grid2'
 import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -21,7 +24,7 @@ import { v4 as uuidv4 } from 'uuid' // Import SweetAlert2
 const columns = [
   {
     field: 'name',
-    headerName: 'Division name',
+    headerName: 'Jabatan',
     width: 150,
     editable: true
   },
@@ -63,29 +66,18 @@ const CustomToolbar = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '8px 16px',
-        backgroundColor: '#f5f5f5',
+
         borderBottom: '1px solid #ddd'
       }}
     >
       {/* Title Section */}
-      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold', color: '#333' }}>
-        divisions
+      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold' }}>
+        Jabatan
       </Typography>
 
       {/* Quick Filter Section */}
       <Stack direction='row' alignItems='center' spacing={1}>
-        <GridToolbarQuickFilter
-          placeholder='Search...'
-          sx={{
-            '& input': {
-              padding: '6px 8px',
-              fontSize: '14px',
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              border: '1px solid #ccc'
-            }
-          }}
-        />
+        <GridToolbarQuickFilter placeholder='Search...' />
       </Stack>
     </Box>
   )
@@ -251,13 +243,17 @@ export default function DataGridDemo() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* Form */}
-      <Box sx={{ mb: 2 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
+      <Card>
+        <CardContent>
+          {/* Form */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <FormControl size='small' fullWidth>
               <InputLabel>Unit</InputLabel>
-              <Select value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })}>
+              <Select
+                label='Unit'
+                value={formData.unit}
+                onChange={e => setFormData({ ...formData, unit: e.target.value })}
+              >
                 {unit.map(unit => (
                   <MenuItem key={unit.name} value={unit.name}>
                     {unit.name}
@@ -265,11 +261,14 @@ export default function DataGridDemo() {
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Division</InputLabel>
-              <Select value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })}>
+
+            <FormControl size='small' fullWidth>
+              <InputLabel>Divisi</InputLabel>
+              <Select
+                label='Divisi'
+                value={formData.division}
+                onChange={e => setFormData({ ...formData, division: e.target.value })}
+              >
                 {division.map(division => (
                   <MenuItem key={division.name} value={division.name}>
                     {division.name}
@@ -277,51 +276,50 @@ export default function DataGridDemo() {
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-          <Grid item xs={12} md={3}>
+
             <TextField
+              size='small'
               fullWidth
-              label='Division name'
+              label='Name'
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
             />
-          </Grid>
-          <Grid item xs={12} md={3} display='flex' alignItems='center'>
-            <Button variant='contained' color='primary' size='large' onClick={isEdit ? handleUpdate : handleAdd}>
+
+            <Button size='small' variant='contained' color='primary' onClick={isEdit ? handleUpdate : handleAdd}>
               {isEdit ? 'Update' : 'Add'}
             </Button>
-          </Grid>
-        </Grid>
-      </Box>
+          </Box>
 
-      {/* DataGrid */}
-      <Box sx={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 5
-              }
-            },
-            filter: {
-              filterModel: {
-                items: []
-              }
-            }
-          }}
-          pageSizeOptions={[10]}
-          disableRowSelectionOnClick
-          slots={{ toolbar: CustomToolbar }}
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true
-            }
-          }}
-        />
-      </Box>
+          {/* DataGrid */}
+          <Box sx={{ height: 400, width: '100%' }}>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              loading={loading}
+              initialState={{
+                pagination: {
+                  paginationModel: {
+                    pageSize: 5
+                  }
+                },
+                filter: {
+                  filterModel: {
+                    items: []
+                  }
+                }
+              }}
+              pageSizeOptions={[10]}
+              disableRowSelectionOnClick
+              slots={{ toolbar: CustomToolbar }}
+              slotProps={{
+                toolbar: {
+                  showQuickFilter: true
+                }
+              }}
+            />
+          </Box>
+        </CardContent>
+      </Card>
     </Box>
   )
 }
