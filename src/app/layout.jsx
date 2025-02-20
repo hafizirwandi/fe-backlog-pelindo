@@ -13,6 +13,8 @@ import '@/app/globals.css'
 // Generated Icon CSS Imports
 import '@assets/iconify-icons/generated-icons.css'
 
+import { AuthProvider } from '@/context/AuthContext'
+
 export const metadata = {
   title: 'Backlog Pelindo',
   description: ''
@@ -28,8 +30,11 @@ const RootLayout = async props => {
   return (
     <html id='__next' dir={direction} suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
-        <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-        {children}
+        <AuthProvider>
+          <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
+
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

@@ -21,6 +21,8 @@ import Divider from '@mui/material/Divider'
 import classnames from 'classnames'
 
 // Component Imports
+import Swal from 'sweetalert2'
+
 import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
 import CustomTextField from '@core/components/mui/TextField'
@@ -31,6 +33,8 @@ import themeConfig from '@configs/themeConfig'
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
+
+import { login } from '@/utils/auth'
 
 // Styled Custom Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -85,6 +89,46 @@ const LoginV2 = ({ mode }) => {
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
+  const [nip, setNIP] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    Swal.fire({
+      title: 'Sedang Proses...',
+      text: 'Mohon tunggu sebentar',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
+
+    const user = await login(nip, password)
+
+    if (user.status) {
+      Swal.fire({
+        title: 'Login Berhasil!',
+        text: user.message,
+        icon: 'success',
+        timer: 2000, // Otomatis hilang setelah 2 detik
+        showConfirmButton: false
+      }).then(() => {
+        router.push('/home')
+      })
+    } else {
+      Swal.fire({
+        title: 'Login Gagal',
+        text: user.message,
+        icon: 'error'
+      })
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className='flex bs-full justify-center'>
       <div
@@ -110,23 +154,31 @@ const LoginV2 = ({ mode }) => {
         </Link>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div className='flex flex-col gap-1'>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}!`}</Typography>
-            <Typography>Please sign-in to your account and start the adventure</Typography>
+            <Typography variant='h4'>{`${themeConfig.aplicationName}`}</Typography>
+            <Typography>Silahkan login untuk masuk ke sistem!</Typography>
           </div>
-          <form
-            noValidate
-            autoComplete='off'
-            onSubmit={e => {
-              e.preventDefault()
-              router.push('/')
-            }}
-            className='flex flex-col gap-5'
-          >
-            <CustomTextField autoFocus fullWidth label='Email or Username' placeholder='Enter your email or username' />
+          <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
             <CustomTextField
+              autoFocus
+              fullWidth
+              label='NIP'
+              value={nip}
+              onChange={e => {
+                setNIP(e.target.value)
+              }}
+              placeholder='Masukkan NIP anda'
+              required
+              disabled={isLoading}
+            />
+            <CustomTextField
+              required
               fullWidth
               label='Password'
               placeholder='············'
+              value={password}
+              onChange={e => {
+                setPassword(e.target.value)
+              }}
               id='outlined-adornment-password'
               type={isPasswordShown ? 'text' : 'password'}
               slotProps={{
@@ -140,37 +192,11 @@ const LoginV2 = ({ mode }) => {
                   )
                 }
               }}
+              disabled={isLoading}
             />
-            <div className='flex justify-between items-center gap-x-3 gap-y-1 flex-wrap'>
-              <FormControlLabel control={<Checkbox />} label='Remember me' />
-              <Typography className='text-end' color='primary.main' component={Link}>
-                Forgot password?
-              </Typography>
-            </div>
-            <Button fullWidth variant='contained' type='submit'>
-              Login
+            <Button fullWidth variant='contained' type='submit' disabled={isLoading}>
+              {isLoading ? 'Memproses...' : 'Login'}
             </Button>
-            <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New on our platform?</Typography>
-              <Typography component={Link} color='primary.main'>
-                Create an account
-              </Typography>
-            </div>
-            <Divider className='gap-2 text-textPrimary'>or</Divider>
-            <div className='flex justify-center items-center gap-1.5'>
-              <IconButton className='text-facebook' size='small'>
-                <i className='tabler-brand-facebook-filled' />
-              </IconButton>
-              <IconButton className='text-twitter' size='small'>
-                <i className='tabler-brand-twitter-filled' />
-              </IconButton>
-              <IconButton className='text-textPrimary' size='small'>
-                <i className='tabler-brand-github-filled' />
-              </IconButton>
-              <IconButton className='text-error' size='small'>
-                <i className='tabler-brand-google-filled' />
-              </IconButton>
-            </div>
           </form>
         </div>
       </div>
