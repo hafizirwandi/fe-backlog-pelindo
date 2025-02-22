@@ -76,3 +76,30 @@ export const logout = async () => {
     }
   }
 }
+
+export const refreshToken = async () => {
+  try {
+    const refreshToken = Cookies.get('refresh_token')
+
+    if (!refreshToken) return false // Kalau tidak ada refresh_token, langsung return false
+
+    const res = await fetch(`${API_URL}/v1/refresh-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    })
+
+    const data = await res.json()
+
+    if (data.status) {
+      Cookies.set('token', data.data.token, { httpOnly: true })
+      Cookies.set('expires_in', data.data.expires_in, { httpOnly: true })
+
+      return true
+    } else {
+      return false
+    }
+  } catch (error) {
+    return false
+  }
+}

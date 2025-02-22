@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+import { refreshToken } from '@/utils/auth'
+
 const url = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export async function middleware(req) {

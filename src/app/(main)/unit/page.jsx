@@ -1,260 +1,378 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
-import { Box, Button, CardContent, Chip, Stack, TextField, Typography, Card } from '@mui/material'
+import {
+  Box,
+  Button,
+  CardContent,
+  Stack,
+  TextField,
+  Typography,
+  Card,
+  useMediaQuery,
+  IconButton,
+  Icon
+} from '@mui/material'
 import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
-import axios from 'axios'
+import { useDebouncedCallback, useDebounce } from '@coreui/react-pro'
+
+import { Delete, Edit } from '@mui/icons-material'
+
 import Swal from 'sweetalert2'
-import { v4 as uuidv4 } from 'uuid' // Import SweetAlert2
 
-const columns = [
-  {
-    field: 'name',
-    headerName: 'Unit name',
-    width: 150,
-    editable: true
-  },
+import { createUnit, dataUnit, deleteUnit, findUnit, updateUnit } from '@/utils/unit'
 
-  {
-    field: 'actions',
-    headerName: 'Actions',
-    width: 150,
-    renderCell: params => (
-      <Stack direction='row' spacing={1}>
-        <Button variant='contained' color='primary' size='small' onClick={() => params.row.onEdit(params.row)}>
-          Edit
-        </Button>
-        <Button variant='contained' color='error' size='small' onClick={() => params.row.onDelete(params.row.id)}>
-          Delete
-        </Button>
-      </Stack>
-    )
-  }
-]
+const CustomToolbar = ({ searchQuery, setSearchQuery }) => {
+  const [localSearch, setLocalSearch] = useState(searchQuery)
 
-const CustomToolbar = () => {
+  const debouncedSearch = useDebouncedCallback(value => {
+    setSearchQuery(value)
+  }, 500)
+
+  useEffect(() => {
+    debouncedSearch(localSearch)
+  }, [localSearch, debouncedSearch])
+
   return (
     <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
         padding: '8px 16px',
-
         borderBottom: '1px solid #ddd'
       }}
     >
-      {/* Title Section */}
-      <Typography variant='h6' component='div' sx={{ fontWeight: 'bold' }}>
-        Unit
-      </Typography>
-
-      {/* Quick Filter Section */}
-      <Stack direction='row' alignItems='center' spacing={1}>
-        <GridToolbarQuickFilter placeholder='Search...' />
+      <Stack direction='row' alignItems='center' spacing={1} sx={{ justifyContent: 'flex-end', width: '100%' }}>
+        <TextField
+          variant='outlined'
+          placeholder='Search...'
+          value={localSearch}
+          onChange={e => setLocalSearch(e.target.value)}
+          size='small'
+        />
       </Stack>
     </Box>
   )
 }
 
 export default function DataGridDemo() {
-  const [rows, setRows] = useState([]) // State untuk menyimpan data rows
-  const [loading, setLoading] = useState(true) // State untuk loading indicator
-  const [formData, setFormData] = useState({ id: '', name: '' }) // State untuk form
-  const [isEdit, setIsEdit] = useState(false) // State untuk mengetahui apakah sedang edit
+  // Form
+  const [formData, setFormData] = useState({ id: '', nama: '' })
+  const [isEdit, setIsEdit] = useState(false)
+  const inputRef = useRef(null)
+
+  // Table
+  const [loading, setLoading] = useState(true)
+  const [rows, setRows] = useState([])
+  const [totalRows, setTotalRows] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10
+  })
+
+  // View responsive
+  const isMobile = useMediaQuery('(max-width:600px)')
+  const isTablet = useMediaQuery('(max-width:960px)')
+  const pageSize = isMobile ? 5 : isTablet ? 10 : 20
 
   useEffect(() => {
-    // Fetch data dari JSON Server
-    axios
-      .get('http://localhost:3001/units') // Endpoint JSON Server
+    setLoading(true)
+
+    dataUnit(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
       .then(response => {
-        setRows(
-          response.data.map(row => ({
-            ...row,
-            onEdit: handleEdit, // Tambahkan fungsi edit
-            onDelete: handleDelete // Tambahkan fungsi delete
+        if (response.status) {
+          let data = response.data
+
+          data = data.map((item, index) => ({
+            no: index + 1 + paginationModel.page * paginationModel.pageSize,
+            ...item
           }))
-        )
-        setLoading(false) // Matikan loading
+          setRows(data)
+          setTotalRows(response.pagination.total)
+        }
+
+        setLoading(false)
       })
       .catch(error => {
         console.error('Error fetching data:', error)
-        setLoading(false) // Matikan loading meskipun error
+        setLoading(false)
       })
-  }, [])
 
-  const handleAdd = () => {
-    if (!formData.name) return
+    if (isEdit && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [paginationModel.page, paginationModel.pageSize, searchQuery, isEdit])
 
-    const newRow = { ...formData, id: uuidv4() }
+  const columns = [
+    { field: 'id', headerName: 'ID', hide: true },
+    {
+      field: 'no',
+      headerName: 'No',
+      width: 70
+    },
+    { field: 'nama', headerName: 'Nama', flex: 1 },
+    {
+      field: 'actions',
+      headerName: 'Aksi',
+      renderCell: params => (
+        <>
+          <IconButton
+            size='small'
+            color='primary'
+            onClick={() => handleEdit(params.row.id)}
+            sx={{ width: 24, height: 24 }}
+          >
+            <Edit fontSize='small' />
+          </IconButton>
+          <IconButton
+            size='small'
+            color='warning'
+            onClick={() => handleDelete(params.row.id, params.row.nama)}
+            sx={{ width: 24, height: 24 }}
+          >
+            <Delete fontSize='small' />
+          </IconButton>
+        </>
+      )
+    }
+  ]
 
-    axios
-      .post('http://localhost:3001/units', newRow)
-      .then(response => {
-        setRows(prev => [
-          ...prev,
-          {
-            ...response.data,
-            onEdit: handleEdit, // Tambahkan fungsi edit
-            onDelete: handleDelete // Tambahkan fungsi delete
-          }
-        ])
-        setFormData({ id: '', name: '' }) // Reset form
-
-        // Tampilkan SweetAlert2 setelah berhasil
-        Swal.fire({
-          title: 'Success!',
-          text: 'Data has been added successfully.',
-          icon: 'success',
-          confirmButtonText: 'OK'
+  const handleEdit = id => {
+    findUnit(id).then(res => {
+      if (res.status) {
+        setFormData({
+          id: res.data.id,
+          nama: res.data.nama
         })
-      })
-      .catch(error => {
-        console.error('Error adding data:', error)
 
-        // Tampilkan SweetAlert2 jika terjadi error
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to add data.',
-          icon: 'error',
-          confirmButtonText: 'Try Again'
-        })
-      })
-  }
+        setIsEdit(true)
 
-  const handleEdit = row => {
-    setFormData(row)
-    setIsEdit(true)
-  }
-
-  const handleUpdate = () => {
-    axios
-      .put(`http://localhost:3001/units/${formData.id}`, formData) // Pastikan ID valid
-      .then(() => {
-        setRows(prev =>
-          prev.map(row => (row.id === formData.id ? { ...formData, onEdit: handleEdit, onDelete: handleDelete } : row))
-        )
-        setFormData({ id: '', name: '' }) // Reset form
-        setIsEdit(false)
-
-        // SweetAlert2 sukses
-        Swal.fire({
-          title: 'Updated!',
-          text: 'The data has been updated successfully.',
-          icon: 'success',
-          confirmButtonText: 'OK'
-        })
-      })
-      .catch(error => {
-        console.error('Error updating data:', error)
-
-        // SweetAlert2 error
-        Swal.fire({
-          title: 'Error!',
-          text: 'Failed to update data.',
-          icon: 'error',
-          confirmButtonText: 'Try Again'
-        })
-      })
-  }
-
-  // Fungsi Delete dengan SweetAlert2
-  const handleDelete = id => {
-    // Tanyakan konfirmasi sebelum delete
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'You will not be able to recover this data!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    }).then(result => {
-      if (result.isConfirmed) {
-        axios
-          .delete(`http://localhost:3001/units/${id}`) // Pastikan ID valid
-          .then(() => {
-            setRows(prev => prev.filter(row => row.id !== id)) // Hapus row dari state
-
-            // SweetAlert2 sukses delete
-            Swal.fire({
-              title: 'Deleted!',
-              text: 'The data has been deleted.',
-              icon: 'success',
-              confirmButtonText: 'OK'
-            })
-          })
-          .catch(error => {
-            console.error('Error deleting data:', error)
-
-            // SweetAlert2 error delete
-            Swal.fire({
-              title: 'Error!',
-              text: 'Failed to delete data.',
-              icon: 'error',
-              confirmButtonText: 'Try Again'
-            })
-          })
+        setTimeout(() => inputRef.current?.focus(), 50)
       }
     })
+  }
+
+  const handleDelete = async (id, nama) => {
+    setLoading(true)
+
+    const result = await Swal.fire({
+      title: 'Konfirmasi?',
+      text: `Apakah anda yakin ingin menghapus Unit ${nama}!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const res = await deleteUnit(id)
+
+        if (res.status) {
+          await Swal.fire({
+            title: 'Berhasil!',
+            text: res.message,
+            icon: 'success',
+            showConfirmButton: false
+          })
+        }
+
+        const response = await dataUnit(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
+
+        if (response.status) {
+          setRows(
+            response.data.map((item, index) => ({
+              no: index + 1 + paginationModel.page * paginationModel.pageSize,
+              ...item
+            }))
+          )
+          setTotalRows(response.pagination.total)
+        }
+
+        setFormData({ id: '', nama: '' })
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: err.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  const handleUpdate = async () => {
+    setLoading(true)
+
+    Swal.fire({
+      title: 'Sedang Proses...',
+      text: 'Mohon tunggu sebentar',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
+
+    try {
+      const res = await updateUnit(formData.id, formData)
+
+      if (res.status) {
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false
+        })
+
+        const response = await dataUnit(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
+
+        if (response.status) {
+          setRows(
+            response.data.map((item, index) => ({
+              no: index + 1 + paginationModel.page * paginationModel.pageSize,
+              ...item
+            }))
+          )
+          setTotalRows(response.pagination.total)
+        }
+
+        setFormData({ id: '', nama: '' }) // Reset form
+        setIsEdit(false)
+      }
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: err.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreate = async () => {
+    setLoading(true)
+
+    if (!formData.nama.trim()) {
+      Swal.fire('Peringatan', 'Nama tidak boleh kosong!', 'warning')
+
+      return
+    }
+
+    try {
+      const res = await createUnit(formData)
+
+      if (res.status) {
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false
+        })
+
+        const response = await dataUnit(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
+
+        if (response.status) {
+          setRows(
+            response.data.map((item, index) => ({
+              no: index + 1 + paginationModel.page * paginationModel.pageSize,
+              ...item
+            }))
+          )
+          setTotalRows(response.pagination.total)
+        }
+
+        setFormData({ id: '', nama: '' })
+      }
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: err.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <>
       <Typography variant='h3'>Unit</Typography>
-      <Card>
-        <CardContent>
-          {/* Form */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField
-              size='small'
-              label='Nama'
-              fullWidth
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-            />
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+        {/* Card Form */}
+        <Card sx={{ flex: { xs: '1', md: '30%' }, padding: 2, maxHeight: { md: 200 } }}>
+          <CardContent>
+            <Typography variant='h6'>Form Unit</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+              <TextField
+                size='small'
+                label='Nama'
+                fullWidth
+                value={formData.nama}
+                onChange={e => setFormData({ ...formData, nama: e.target.value })}
+                inputRef={inputRef}
+              />
+              {isEdit ? (
+                <Stack direction='row' spacing={1}>
+                  <Button size='small' variant='contained' color='primary' onClick={handleUpdate} disabled={loading}>
+                    {loading ? 'Memproses...' : 'Ubah'}
+                  </Button>
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    color='secondary'
+                    onClick={() => {
+                      setFormData({ id: '', nama: '' }) // Reset form
+                      setIsEdit(false) // Keluar dari mode edit
+                    }}
+                    disabled={loading}
+                  >
+                    Batal
+                  </Button>
+                </Stack>
+              ) : (
+                <Button size='small' variant='contained' color='primary' onClick={handleCreate} disabled={loading}>
+                  {loading ? 'Memproses...' : 'Tambah'}
+                </Button>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
 
-            {isEdit ? (
-              <Button size='small' variant='contained' color='primary' onClick={handleUpdate}>
-                Update
-              </Button>
-            ) : (
-              <Button size='small' variant='contained' color='primary' onClick={handleAdd}>
-                Add
-              </Button>
-            )}
-          </Box>
-
-          {/* DataGrid */}
-          <Box>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              loading={loading}
-              initialState={{
-                pagination: {
-                  paginationModel: {
-                    pageSize: 5
-                  }
-                },
-                filter: {
-                  filterModel: {
-                    items: []
-                  }
-                }
-              }}
-              pageSizeOptions={[10]}
-              disableRowSelectionOnClick
-              slots={{ toolbar: CustomToolbar }}
-              slotProps={{
-                toolbar: {
-                  showQuickFilter: true
-                }
-              }}
-            />
-          </Box>
-        </CardContent>
-      </Card>
+        {/* Card Tabel */}
+        <Card sx={{ flex: { xs: '1', md: '70%' } }}>
+          <CardContent>
+            <Typography variant='h6'>Data Unit</Typography>
+            <Box sx={{ mt: 2, width: '100%' }}>
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                columnVisibilityModel={{ id: false }}
+                loading={loading}
+                paginationMode='server'
+                rowCount={totalRows}
+                paginationModel={paginationModel}
+                onPaginationModelChange={newModel => {
+                  setPaginationModel(prev => ({
+                    ...prev,
+                    page: newModel.page,
+                    pageSize: newModel.pageSize
+                  }))
+                }}
+                pageSizeOptions={[10, 20, 50]}
+                pageSize={pageSize}
+                slots={{ toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> }}
+              />
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
     </>
   )
 }
