@@ -11,9 +11,11 @@ import {
   Card,
   useMediaQuery,
   IconButton,
-  Icon
+  Icon,
+  Pagination,
+  PaginationItem
 } from '@mui/material'
-import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid'
+import { DataGrid, gridPageCountSelector, GridPagination, useGridApiContext, useGridSelector } from '@mui/x-data-grid'
 import { useDebouncedCallback, useDebounce } from '@coreui/react-pro'
 
 import { Delete, Edit } from '@mui/icons-material'
@@ -139,6 +141,40 @@ export default function DataGridDemo() {
     }
   ]
 
+  const CustomPagination = () => {
+    const apiRef = useGridApiContext()
+    const pageCount = useGridSelector(apiRef, gridPageCountSelector)
+    const page = apiRef.current.state.pagination.paginationModel.page
+    const pageSize = apiRef.current.state.pagination.paginationModel.pageSize
+
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        {/* Rows per page di kiri */}
+        <GridPagination
+          sx={{
+            flexGrow: 0, // Supaya tidak memenuhi ruang
+            '& .MuiTablePagination-displayedRows': { display: 'none' }, // Hilangkan spacer bawaan
+            '& .MuiTablePagination-actions': { display: 'none' } // Hilangkan tombol next/prev bawaan
+          }}
+        />
+
+        {/* Range data + Pagination di kanan */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant='body2'>
+            {`${page * pageSize + 1}–${Math.min((page + 1) * pageSize, totalRows)} of ${totalRows}`}
+          </Typography>
+
+          <Pagination
+            count={pageCount}
+            page={page + 1}
+            onChange={(event, newPage) => apiRef.current.setPage(newPage - 1)}
+            renderItem={item => <PaginationItem {...item} />}
+          />
+        </Box>
+      </Box>
+    )
+  }
+
   const handleEdit = id => {
     findUnit(id).then(res => {
       if (res.status) {
@@ -204,6 +240,8 @@ export default function DataGridDemo() {
         setLoading(false)
       }
     }
+
+    setLoading(false)
   }
 
   const handleUpdate = async () => {
@@ -321,7 +359,7 @@ export default function DataGridDemo() {
               {isEdit ? (
                 <Stack direction='row' spacing={1}>
                   <Button size='small' variant='contained' color='primary' onClick={handleUpdate} disabled={loading}>
-                    {loading ? 'Memproses...' : 'Ubah'}
+                    Ubah
                   </Button>
                   <Button
                     size='small'
@@ -338,7 +376,7 @@ export default function DataGridDemo() {
                 </Stack>
               ) : (
                 <Button size='small' variant='contained' color='primary' onClick={handleCreate} disabled={loading}>
-                  {loading ? 'Memproses...' : 'Tambah'}
+                  Tambah
                 </Button>
               )}
             </Box>
@@ -357,6 +395,7 @@ export default function DataGridDemo() {
                 loading={loading}
                 paginationMode='server'
                 rowCount={totalRows}
+                pagination
                 paginationModel={paginationModel}
                 onPaginationModelChange={newModel => {
                   setPaginationModel(prev => ({
@@ -367,7 +406,11 @@ export default function DataGridDemo() {
                 }}
                 pageSizeOptions={[10, 20, 50]}
                 pageSize={pageSize}
-                slots={{ toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} /> }}
+                slots={{
+                  toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />,
+
+                  pagination: CustomPagination
+                }}
               />
             </Box>
           </CardContent>
