@@ -18,7 +18,7 @@ export const dataUnit = async (page, pageSize, searchQuery) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataUnit()
+        return dataUnit(page, pageSize, searchQuery)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -33,7 +33,7 @@ export const dataUnit = async (page, pageSize, searchQuery) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataUnit()
+        return dataUnit(page, pageSize, searchQuery)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -66,7 +66,7 @@ export const findUnit = async id => {
     const refreshSuccess = await refreshToken()
 
     if (refreshSuccess) {
-      return findUnit()
+      return findUnit(id)
     } else {
       throw new Error('Session expired, please login again.')
     }
@@ -95,7 +95,7 @@ export const updateUnit = async (id, dataUnit) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return updateUnit()
+        return updateUnit(id, dataUnit)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -114,7 +114,7 @@ export const updateUnit = async (id, dataUnit) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return updateUnit()
+        return updateUnit(id, dataUnit)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -147,7 +147,7 @@ export const deleteUnit = async id => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return deleteUnit()
+        return deleteUnit(id)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -162,7 +162,7 @@ export const deleteUnit = async id => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return deleteUnit()
+        return deleteUnit(id)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -195,7 +195,7 @@ export const createUnit = async dataUnit => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return createUnit()
+        return createUnit(dataUnit)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -213,7 +213,7 @@ export const createUnit = async dataUnit => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return createUnit()
+        return createUnit(dataUnit)
       } else {
         throw new Error('Session expired, please login again.')
       }

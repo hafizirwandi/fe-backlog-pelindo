@@ -18,7 +18,7 @@ export const dataLha = async (page, pageSize, searchQuery) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataUnit()
+        return dataLha(page, pageSize, searchQuery)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -33,7 +33,7 @@ export const dataLha = async (page, pageSize, searchQuery) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataUnit()
+        return dataLha(page, pageSize, searchQuery)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -57,16 +57,16 @@ export const dataLha = async (page, pageSize, searchQuery) => {
   }
 }
 
-export const findUnit = async id => {
+export const findLha = async id => {
   const token = Cookies.get('token')
 
-  let urlRequest = `${url}v1/unit/${id}`
+  let urlRequest = `${url}v1/lha/${id}`
 
   if (!token) {
     const refreshSuccess = await refreshToken()
 
     if (refreshSuccess) {
-      return findUnit()
+      return findLha(id)
     } else {
       throw new Error('Session expired, please login again.')
     }
@@ -85,17 +85,17 @@ export const findUnit = async id => {
   }
 }
 
-export const updateUnit = async (id, dataUnit) => {
+export const updateLha = async (id, dataLha) => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/unit/${id}`
+    let urlRequest = `${url}v1/lha/${id}`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return updateUnit()
+        return updateLha(id, dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -104,17 +104,14 @@ export const updateUnit = async (id, dataUnit) => {
     const response = await fetch(urlRequest, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        id: dataUnit.id,
-        nama: dataUnit.nama
-      })
+      body: JSON.stringify(dataLha)
     })
 
     if (response.status === 401) {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return updateUnit()
+        return updateLha(id, dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -137,17 +134,17 @@ export const updateUnit = async (id, dataUnit) => {
   }
 }
 
-export const deleteUnit = async id => {
+export const deleteLha = async id => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/unit/${id}`
+    let urlRequest = `${url}v1/lha/${id}`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return deleteUnit()
+        return deleteLha(id)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -162,7 +159,7 @@ export const deleteUnit = async id => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return deleteUnit()
+        return deleteLha(id)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -195,7 +192,7 @@ export const createLha = async dataLha => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return createUnit()
+        return createLha(dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -211,7 +208,7 @@ export const createLha = async dataLha => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return createUnit()
+        return createLha(dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }
