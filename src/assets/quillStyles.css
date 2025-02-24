@@ -1,0 +1,15 @@
+.ql-container {
+  min-height: 200px !important;
+  max-height: 300px !important;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.ql-toolbar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.ql-editor {
+  min-height: 180px !important;
+}
