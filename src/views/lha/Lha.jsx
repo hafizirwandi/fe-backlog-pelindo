@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
@@ -109,18 +109,17 @@ export default function Lha() {
     2: 'success'
   }
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     setLoading(true)
 
     dataLha(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
       .then(response => {
         if (response.status) {
-          let data = response.data
-
-          data = data.map((item, index) => ({
+          let data = response.data.map((item, index) => ({
             no: index + 1 + paginationModel.page * paginationModel.pageSize,
             ...item
           }))
+
           setRows(data)
           setTotalRows(response.pagination.total)
         }
@@ -131,11 +130,11 @@ export default function Lha() {
         console.error('Error fetching data:', error)
         setLoading(false)
       })
+  }, [paginationModel.page, paginationModel.pageSize, searchQuery])
 
-    if (isEdit && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [paginationModel.page, paginationModel.pageSize, searchQuery, isEdit])
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const columns = [
     { field: 'id', headerName: 'ID', hide: true },
@@ -177,7 +176,12 @@ export default function Lha() {
       headerName: 'Aksi',
       renderCell: params => (
         <>
-          <IconButton size='small' color='secondary' sx={{ width: 24, height: 24 }}>
+          <IconButton
+            size='small'
+            color='secondary'
+            sx={{ width: 24, height: 24 }}
+            onClick={() => handleDetail(params.row.id)}
+          >
             <VisibilityIcon fontSize='small' />
           </IconButton>
 
@@ -280,7 +284,8 @@ export default function Lha() {
           title: 'Berhasil!',
           text: res.message,
           icon: 'success',
-          showConfirmButton: false
+          showConfirmButton: false,
+          timer: 1000
         })
 
         const response = await dataLha(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
@@ -433,6 +438,10 @@ export default function Lha() {
     }
 
     setLoading(false)
+  }
+
+  const handleDetail = id => {
+    router.push(`/lha/${id}/detail`)
   }
 
   return (

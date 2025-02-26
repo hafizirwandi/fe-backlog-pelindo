@@ -57,31 +57,77 @@ export const dataLha = async (page, pageSize, searchQuery) => {
   }
 }
 
+export const detailsLha = async id => {
+  const token = Cookies.get('token')
+
+  let urlRequest = `${url}v1/lha/details/${id}`
+
+  try {
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return detailsLha(id)
+      } else {
+        throw new Error('Session expired, please login again fuck.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || response.status != 200) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      data: data.data
+    }
+  } catch (error) {
+    return {
+      status: false,
+      message: error
+    }
+  }
+}
+
 export const findLha = async id => {
   const token = Cookies.get('token')
 
   let urlRequest = `${url}v1/lha/${id}`
 
-  if (!token) {
-    const refreshSuccess = await refreshToken()
+  try {
+    if (!token) {
+      const refreshSuccess = await refreshToken()
 
-    if (refreshSuccess) {
-      return findLha(id)
-    } else {
-      throw new Error('Session expired, please login again.')
+      if (refreshSuccess) {
+        return findLha(id)
+      } else {
+        throw new Error('Session expired, please login again fuck.')
+      }
     }
-  }
 
-  const response = await fetch(urlRequest, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-  })
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
 
-  const data = await response.json()
+    const data = await response.json()
 
-  return {
-    status: true,
-    data: data.data
+    if (!response.ok || response.status != 200) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      data: data.data
+    }
+  } catch (error) {
+    return {
+      status: false,
+      message: error
+    }
   }
 }
 

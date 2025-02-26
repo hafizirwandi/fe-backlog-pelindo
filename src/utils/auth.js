@@ -24,7 +24,7 @@ export const login = async (nip, password) => {
       sameSite: 'Strict'
     })
 
-    Cookies.set('expires_iv', data.data.expires_in, {
+    Cookies.set('expires_in', data.data.expires_in, {
       expires: expiresDays,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict'
@@ -100,6 +100,8 @@ export const refreshToken = async () => {
       return false
     }
   } catch (error) {
+    console.log(error)
+
     return false
   }
 }

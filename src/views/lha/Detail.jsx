@@ -1,7 +1,7 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { use, useCallback, useEffect, useState } from 'react'
 
-import { useRouter } from 'next/navigation'
+import { notFound, useParams, useRouter } from 'next/navigation'
 
 import {
   Box,
@@ -39,17 +39,13 @@ import {
   Paper,
   TableContainer
 } from '@mui/material'
-import DeleteIcon from '@mui/icons-material/Delete'
-import VisibilityIcon from '@mui/icons-material/Visibility'
-import EditIcon from '@mui/icons-material/Edit'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import axios from 'axios'
-import Swal from 'sweetalert2'
-import { v4 as uuidv4 } from 'uuid'
 import Grid from '@mui/material/Grid2'
 
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+
+import { detailsLha, findLha } from '@/utils/lha'
 
 function Row({ row }) {
   const [open, setOpen] = useState(false)
@@ -63,7 +59,7 @@ function Row({ row }) {
           </IconButton>
         </TableCell>
         <TableCell sx={{ width: 400 }}>{row.deskripsi}</TableCell>
-        <TableCell>{row.dueDate}</TableCell>
+        <TableCell>{row.batas_tanggal}</TableCell>
         <TableCell>
           <Chip
             label={row.status}
@@ -131,12 +127,26 @@ function Row({ row }) {
   )
 }
 
-export default function Findings() {
+export default function DetailLha() {
   const router = useRouter()
   const [formData, setFormData] = useState({ id: '', name: '', unit: '', division: '' }) // State untuk form
   const [unit, setUnit] = useState([])
   const [division, setDivision] = useState([])
   const [open, setOpen] = useState(false)
+
+  const [dataLha, setDataLha] = useState({
+    id: '',
+    judul: '',
+    nomor: '',
+    tanggal: new Date().toISOString().split('T')[0],
+    periode: '',
+    deskripsi: '',
+    last_stage: '',
+    stage_name: '',
+    status: '',
+    status_name: '',
+    temuan: []
+  })
 
   const data = [
     {
@@ -153,6 +163,36 @@ export default function Findings() {
     }
   ]
 
+  const id = useParams()
+
+  const Lha = useCallback(() => {
+    if (!id) return
+
+    detailsLha(id.id).then(res => {
+      if (res.status) {
+        const data = res.data
+
+        setDataLha({
+          id: data.id,
+          judul: data.judul ?? '-',
+          nomor: data.no_lha ?? '-',
+          tanggal: data.tanggal ?? new Date().toISOString().split('T')[0],
+          periode: data.periode ?? '-',
+          deskripsi: data.deskripsi ?? '-',
+          stage_name: data.stage_name ?? '-',
+          status_name: data.status_name ?? '-',
+          temuan: data.temuan
+        })
+      } else {
+        router.replace('/not-found')
+      }
+    })
+  }, [id, router])
+
+  useEffect(() => {
+    Lha()
+  }, [Lha])
+
   return (
     <>
       <Typography variant='h4' gutterBottom>
@@ -160,36 +200,54 @@ export default function Findings() {
       </Typography>
 
       <Grid container spacing={2} sx={{ mt: 5, mb: 5 }}>
-        <Grid size={10}>
+        <Grid size={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant='h6'>Detail LHA</Typography>
+          <Button variant='contained' color='primary' onClick={() => console.log('Tombol diklik!')}>
+            Teruskan
+          </Button>
+        </Grid>
+        <Grid size={12}>
           <Table>
             <TableBody>
               <TableRow>
                 <TableCell sx={{ width: 200 }}>No. LHA</TableCell>
                 <TableCell sx={{ width: 10 }}>:</TableCell>
-                <TableCell>xxx/yy./zzzz</TableCell>
+                <TableCell>{dataLha.nomor}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Judul</TableCell>
                 <TableCell>:</TableCell>
-                <TableCell>LHA 1</TableCell>
+                <TableCell>{dataLha.judul}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Tanggal</TableCell>
+                <TableCell>:</TableCell>
+                <TableCell>{dataLha.tanggal}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Periode</TableCell>
                 <TableCell>:</TableCell>
-                <TableCell>2024</TableCell>
+                <TableCell>{dataLha.periode}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Stage Terakhir</TableCell>
                 <TableCell>:</TableCell>
                 <TableCell>
-                  <Chip label='PJ' variant='outlined' color='primary' size='small' />
+                  <Chip label={dataLha.stage_name} variant='outlined' color='primary' size='small' />
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Status</TableCell>
                 <TableCell>:</TableCell>
                 <TableCell>
-                  <Chip label='Selesai' variant='outlined' color='success' size='small' />
+                  <Chip label={dataLha.status_name} variant='outlined' color='success' size='small' />
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Deskripsi</TableCell>
+                <TableCell>:</TableCell>
+                <TableCell>
+                  <Box dangerouslySetInnerHTML={{ __html: dataLha.deskripsi }} />
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -197,75 +255,55 @@ export default function Findings() {
         </Grid>
         <Grid size={2}></Grid>
       </Grid>
-      <Divider>TEMUAN</Divider>
-      <Grid container spacing={2} sx={{ mt: 5 }}>
-        <Grid size={12}>
-          <Accordion defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='panel1-content' id='panel1-header'>
-              <Typography component='span'>Temuan 1</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell>Deskripsi</TableCell>
-                      <TableCell>Due Date</TableCell>
-                      <TableCell>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.map((row, index) => (
-                      <Row key={index} row={row} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-            <AccordionActions>
-              <Button variant='contained' color='warning'>
-                Ubah
-              </Button>
-              <Button variant='contained' color='error'>
-                Hapus
-              </Button>
-            </AccordionActions>
-          </Accordion>
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='panel1-content' id='panel1-header'>
-              <Typography component='span'>Temuan 2</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell>Deskripsi</TableCell>
-                      <TableCell>Due Date</TableCell>
-                      <TableCell>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.map((row, index) => (
-                      <Row key={index} row={row} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-            <AccordionActions>
-              <Button variant='contained' color='warning'>
-                Ubah
-              </Button>
-              <Button variant='contained' color='error'>
-                Hapus
-              </Button>
-            </AccordionActions>
-          </Accordion>
-        </Grid>
-      </Grid>
+      {Object.entries(dataLha.temuan).map(([key, item]) => (
+        <Box key={key}>
+          <Divider textAlign='left' sx={{ my: 5 }}>
+            {item.nama_divisi}
+          </Divider>
+          <Grid container spacing={2}>
+            <Grid size={12}>
+              {item.data.map((row, index) => (
+                <Accordion key={index}>
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls={`panel-${index}-content`}
+                    id={`panel-${index}-header`}
+                  >
+                    <Typography component='span'>{row.judul}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell></TableCell>
+                            <TableCell>Deskripsi</TableCell>
+                            <TableCell>Due Date</TableCell>
+                            <TableCell>Status</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {row.rekomendasi.map((rekomendasi, index) => (
+                            <Row key={index} row={rekomendasi} />
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </AccordionDetails>
+                  <AccordionActions>
+                    <Button variant='contained' color='warning'>
+                      Ubah
+                    </Button>
+                    <Button variant='contained' color='error'>
+                      Hapus
+                    </Button>
+                  </AccordionActions>
+                </Accordion>
+              ))}
+            </Grid>
+          </Grid>
+        </Box>
+      ))}
     </>
   )
 }
