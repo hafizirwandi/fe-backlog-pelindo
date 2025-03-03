@@ -38,6 +38,7 @@
     "react-perfect-scrollbar": "1.5.8",
     "react-quill": "^2.0.0",
     "react-quill-new": "^3.3.3",
+    "react-select": "^5.10.0",
     "react-use": "17.6.0",
     "server-only": "0.0.1",
     "sweetalert2": "^11.6.13",

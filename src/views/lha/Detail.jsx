@@ -62,65 +62,16 @@ function Row({ row }) {
         <TableCell>{row.batas_tanggal}</TableCell>
         <TableCell>
           <Chip
-            label={row.status}
+            label={row.status_name}
             variant='outlined'
-            color={row.status === 'Selesai' ? 'success' : 'warning'}
+            color={row.status_name === 'Selesai' ? 'success' : 'warning'}
             size='small'
           />
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell colSpan={4} style={{ paddingBottom: 0, paddingTop: 0 }}>
-          <Collapse in={open} timeout='auto' unmountOnExit>
-            <Box sx={{ margin: 2 }}>
-              <Typography variant='h6' gutterBottom component='div'>
-                History
-              </Typography>
-              <Table size='small' aria-label='purchases'>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tindak Lanjut</TableCell>
-                    <TableCell>File Pendukung</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been
-                      the industry
-                    </TableCell>
-                    <TableCell>
-                      <Button variant='outlined' size='small' color='primary'>
-                        Download
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been
-                      the industry
-                    </TableCell>
-                    <TableCell>
-                      <Button variant='outlined' size='small' color='primary'>
-                        Download
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been
-                      the industry
-                    </TableCell>
-                    <TableCell>
-                      <Button variant='outlined' size='small' color='primary'>
-                        Download
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </Box>
-          </Collapse>
+          <Collapse in={open} timeout='auto' unmountOnExit></Collapse>
         </TableCell>
       </TableRow>
     </>
@@ -290,14 +241,14 @@ export default function DetailLha() {
                       </Table>
                     </TableContainer>
                   </AccordionDetails>
-                  <AccordionActions>
+                  {/* <AccordionActions>
                     <Button variant='contained' color='warning'>
                       Ubah
                     </Button>
                     <Button variant='contained' color='error'>
                       Hapus
                     </Button>
-                  </AccordionActions>
+                  </AccordionActions> */}
                 </Accordion>
               ))}
             </Grid>
