@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 import { dataDivisiByUnit } from '@/utils/divisi'
 
-export default function DivisiSelect({ unitId, onSelect }) {
+export default function DivisiSelect({ value, unitId, onSelect }) {
   const [open, setOpen] = React.useState(false)
   const [options, setOptions] = React.useState([])
   const [loading, setLoading] = React.useState(false)
@@ -20,7 +20,11 @@ export default function DivisiSelect({ unitId, onSelect }) {
       const response = await dataDivisiByUnit(1, 100, keyword, unitId)
 
       if (response.data) {
-        setOptions(response.data)
+        const uniqueOptions = response.data.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
+        )
+
+        setOptions(uniqueOptions)
       }
     } catch (error) {
       console.error('Error fetching divisi:', error)
@@ -30,20 +34,41 @@ export default function DivisiSelect({ unitId, onSelect }) {
   }
 
   React.useEffect(() => {
-    if (open) {
-      console.log(unitId)
-
-      if (unitId) {
-        fetchData(inputValue, unitId)
-      }
+    if (open && unitId) {
+      fetchData(inputValue, unitId)
+    } else if (unitId) {
+      fetchData(inputValue, unitId)
     } else {
       setOptions([])
+      setSelectedValue(null)
     }
   }, [open, inputValue, unitId])
+
+  React.useEffect(() => {
+    if (!value && !unitId) {
+      setSelectedValue(null)
+
+      return
+    }
+
+    const loadData = async () => {
+      await fetchData('', unitId)
+    }
+
+    loadData()
+  }, [value, unitId])
+
+  React.useEffect(() => {
+    if (!value || options.length === 0) return
+    const foundOption = options.find(option => option.id === value) || null
+
+    setSelectedValue(foundOption)
+  }, [value, options])
 
   return (
     <Autocomplete
       open={open}
+      value={selectedValue}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
@@ -58,6 +83,11 @@ export default function DivisiSelect({ unitId, onSelect }) {
           onSelect(newValue)
         }
       }}
+      renderOption={(props, option) => (
+        <li {...props} key={option.id}>
+          {option.nama}
+        </li>
+      )}
       renderInput={params => (
         <TextField
           {...params}

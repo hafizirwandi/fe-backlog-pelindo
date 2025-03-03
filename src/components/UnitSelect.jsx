@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 import { dataUnit } from '@/utils/unit'
 
-export default function UnitSelect({ onSelect }) {
+export default function UnitSelect({ value, onSelect }) {
   const [open, setOpen] = React.useState(false)
   const [options, setOptions] = React.useState([])
   const [loading, setLoading] = React.useState(false)
@@ -20,7 +20,13 @@ export default function UnitSelect({ onSelect }) {
       const response = await dataUnit(1, 100, keyword)
 
       if (response.data) {
-        setOptions(response.data)
+        const uniqueOptions = response.data.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
+        )
+
+        setOptions(uniqueOptions)
+      } else {
+        setOptions([]) // Kosongkan jika tidak ada data
       }
     } catch (error) {
       console.error('Error fetching unit:', error)
@@ -39,9 +45,28 @@ export default function UnitSelect({ onSelect }) {
     return () => clearTimeout(timeoutId)
   }, [open, inputValue])
 
+  React.useEffect(() => {
+    setSelectedValue(null)
+
+    const loadData = async () => {
+      if (!value) return
+      await fetchData('')
+    }
+
+    loadData()
+  }, [value])
+
+  React.useEffect(() => {
+    if (!value || options.length === 0) return
+    const foundOption = options.find(option => option.id === value) || null
+
+    setSelectedValue(foundOption)
+  }, [value, options])
+
   return (
     <Autocomplete
       open={open}
+      value={selectedValue}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
@@ -56,6 +81,11 @@ export default function UnitSelect({ onSelect }) {
           onSelect(newValue)
         }
       }}
+      renderOption={(props, option) => (
+        <li {...props} key={option.id}>
+          {option.nama}
+        </li>
+      )}
       renderInput={params => (
         <TextField
           {...params}

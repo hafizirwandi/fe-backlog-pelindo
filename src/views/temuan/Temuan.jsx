@@ -38,7 +38,7 @@ import { useDebouncedCallback } from '@coreui/react-pro'
 import CustomIconButton from '@core/components/mui/IconButton'
 import { dataLha } from '@/utils/lha'
 import LHASelect from '@/components/LhaSelect'
-import { createTemuan, dataTemuan, dataTemuanByLha } from '@/utils/temuan'
+import { createTemuan, dataTemuan, dataTemuanByLha, deleteTemuan, findTemuan, updateTemuan } from '@/utils/temuan'
 import UnitSelect from '@/components/UnitSelect'
 import QuillEditor from '@/components/QuillEditor'
 import DivisiSelect from '@/components/DivisiSelect'
@@ -90,6 +90,7 @@ export default function Findings() {
     deskripsi: ''
   })
 
+  const [isEdit, setIsEdit] = useState(false)
   const [isSelected, setIsSelected] = useState(false)
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -109,7 +110,7 @@ export default function Findings() {
     lha_id => {
       setLoading(true)
 
-      if (lha_id !== '') {
+      if (lha_id) {
         dataTemuanByLha(paginationModel.page + 1, paginationModel.pageSize, searchQuery, lha_id)
           .then(response => {
             if (response.status) {
@@ -184,7 +185,8 @@ export default function Findings() {
 
   useEffect(() => {
     fetchData(formData.lha_id)
-  }, [formData, fetchData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchData])
 
   const columns = [
     { field: 'id', headerName: 'ID', hide: true },
@@ -228,7 +230,7 @@ export default function Findings() {
           <IconButton
             size='small'
             color='warning'
-            onClick={() => handleDelete(params.row.id)}
+            onClick={() => handleDeleteTemuan(params.row.id)}
             sx={{ width: 24, height: 24 }}
           >
             <Delete fontSize='small' />
@@ -238,33 +240,25 @@ export default function Findings() {
     }
   ]
 
-  const onSubmit = data => {
-    console.log('Form Data:', data)
-    alert('Form submitted successfully!')
-  }
-
-  const dateNow = new Date().toISOString().split('T')[0]
-  const [forms, setForms] = useState([{ id: 1, title: '', due_date: dateNow }])
-
-  const handleAddForm = () => {
-    setForms([...forms, { id: forms.length + 1, title: '', due_date: dateNow }])
-  }
-
-  const handleRemoveForm = id => {
-    if (forms.length > 1) {
-      setForms(forms.filter(form => form.id !== id))
-    }
-  }
-
-  const handleChange = (id, field, value) => {
-    setForms(forms.map(form => (form.id === id ? { ...form, [field]: value } : form)))
-  }
-
-  const handleTemuan = value => {
+  const handleLha = value => {
     setIsSelected(true)
     let id = value ? value.id : ''
 
     setFormData(prev => ({ ...prev, lha_id: id }))
+
+    if (id === '') {
+      setFormData({
+        id: '',
+        unit: '',
+        divisi: '',
+        departemen: '',
+        nomor: '',
+        judul: '',
+        deskripsi: ''
+      })
+    }
+
+    fetchData(id)
   }
 
   const handleUnit = value => {
@@ -310,11 +304,11 @@ export default function Findings() {
           timer: 1000
         })
 
-        await fetchData(formData.lha_id)
+        fetchData(formData.lha_id)
 
         setFormData({
           id: '',
-          lha_id: '',
+          lha_id: formData.lha_id,
           unit: '',
           divisi: '',
           departemen: '',
@@ -336,6 +330,140 @@ export default function Findings() {
     }
   }
 
+  const handleEdit = async id => {
+    findTemuan(id).then(response => {
+      if (response.status) {
+        const data = response.data
+
+        setFormData({
+          id: data.id,
+          lha_id: data.lha_id,
+          unit: data.unit_id,
+          divisi: data.divisi_id,
+          departemen: data.departemen_id,
+          nomor: data.nomor,
+          judul: data.judul,
+          deskripsi: data.deskripsi
+        })
+        fetchData(data.lha_id)
+
+        setIsEdit(true)
+      } else {
+        Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      }
+    })
+  }
+
+  const handleUpdateTemuan = async () => {
+    const dataTemuan = {
+      id: formData.id,
+      lha_id: formData.lha_id,
+      unit_id: formData.unit,
+      divisi_id: formData.divisi,
+      departemen_id: formData.departemen,
+      nomor: formData.nomor,
+      judul: formData.judul,
+      deskripsi: formData.deskripsi
+    }
+
+    setLoading(true)
+
+    try {
+      const res = await updateTemuan(formData.id, dataTemuan)
+
+      if (res.status) {
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1000
+        })
+
+        fetchData(formData.lha_id)
+
+        setFormData({
+          id: '',
+          lha_id: formData.lha_id,
+          unit: '',
+          divisi: '',
+          departemen: '',
+          nomor: '',
+          judul: '',
+          deskripsi: ''
+        })
+        setIsEdit(false)
+      } else {
+        throw new Error(res.message)
+      }
+    } catch (err) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: err.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteTemuan = async id => {
+    setLoading(true)
+
+    const result = await Swal.fire({
+      title: 'Konfirmasi?',
+      text: `Apakah anda yakin ingin menghapus Temuan ini!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const res = await deleteTemuan(id)
+
+        if (res.status) {
+          await Swal.fire({
+            title: 'Berhasil!',
+            text: res.message,
+            icon: 'success',
+            showConfirmButton: false
+          })
+        }
+
+        fetchData(formData.lha_id)
+
+        setFormData({
+          id: '',
+          lha_id: formData.lha_id,
+          unit: '',
+          divisi: '',
+          departemen: '',
+          nomor: '',
+          judul: '',
+          deskripsi: ''
+        })
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: err.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    setLoading(false)
+  }
+
   return (
     <>
       <Grid container spacing={2}>
@@ -346,11 +474,7 @@ export default function Findings() {
               <Grid container spacing={5}>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <FormControl fullWidth margin='normal'>
-                    <LHASelect
-                      formData={formData.lha_id}
-                      setFormData={value => setFormData(prev => ({ ...prev, lha_id: value }))}
-                      onSelect={handleTemuan}
-                    />
+                    <LHASelect value={formData.lha_id} onSelect={handleLha} />
                   </FormControl>
                   <TextField
                     fullWidth
@@ -369,13 +493,17 @@ export default function Findings() {
                     onChange={e => setFormData({ ...formData, judul: e.target.value })}
                   />
                   <FormControl fullWidth margin='normal'>
-                    <UnitSelect onSelect={handleUnit} />
+                    <UnitSelect value={formData.unit} onSelect={handleUnit} />
                   </FormControl>
                   <FormControl fullWidth margin='normal'>
-                    <DivisiSelect unitId={formData.unit} onSelect={handleDivisi} />
+                    <DivisiSelect value={formData.divisi} unitId={formData.unit} onSelect={handleDivisi} />
                   </FormControl>
                   <FormControl fullWidth margin='normal'>
-                    <DepartemenSelect divisiId={formData.divisi} onSelect={handleDepartemen} />
+                    <DepartemenSelect
+                      value={formData.departemen}
+                      divisiId={formData.divisi}
+                      onSelect={handleDepartemen}
+                    />
                   </FormControl>
                   <Typography variant='body2' sx={{ mt: 2 }}>
                     Deskripsi
@@ -386,16 +514,52 @@ export default function Findings() {
                       onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
                     />
                   </Box>
-                  <Button
-                    type='submit'
-                    variant='contained'
-                    color='primary'
-                    fullWidth
-                    sx={{ mt: 2 }}
-                    onClick={handleCreateTemuan}
-                  >
-                    Submit
-                  </Button>
+                  {isEdit ? (
+                    <Box>
+                      <Button
+                        type='submit'
+                        variant='contained'
+                        color='warning'
+                        fullWidth
+                        sx={{ mt: 2 }}
+                        onClick={handleUpdateTemuan}
+                      >
+                        Update
+                      </Button>
+                      <Button
+                        variant='contained'
+                        color='secondary'
+                        fullWidth
+                        sx={{ mt: 3 }}
+                        onClick={() => {
+                          setFormData({
+                            id: '',
+                            lha_id: formData.lha_id,
+                            unit: '',
+                            divisi: '',
+                            departemen: '',
+                            nomor: '',
+                            judul: '',
+                            deskripsi: ''
+                          })
+                          setIsEdit(false)
+                        }}
+                      >
+                        Batal
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Button
+                      type='submit'
+                      variant='contained'
+                      color='primary'
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      onClick={handleCreateTemuan}
+                    >
+                      Submit
+                    </Button>
+                  )}
                 </Grid>
                 <Grid size={{ xs: 12, md: 8 }}>
                   <DataGrid

@@ -6,11 +6,12 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 import { dataDepartemenByDivisi } from '@/utils/departemen'
 
-export default function DepartemenSelect({ divisiId, onSelect }) {
+export default function DepartemenSelect({ value, divisiId, onSelect }) {
   const [open, setOpen] = React.useState(false)
   const [options, setOptions] = React.useState([])
   const [loading, setLoading] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
+  const [selectedValue, setSelectedValue] = React.useState(null)
 
   const fetchData = async (keyword, divisiId) => {
     setLoading(true)
@@ -19,7 +20,11 @@ export default function DepartemenSelect({ divisiId, onSelect }) {
       const response = await dataDepartemenByDivisi(1, 100, keyword, divisiId)
 
       if (response.data) {
-        setOptions(response.data)
+        const uniqueOptions = response.data.filter(
+          (item, index, self) => index === self.findIndex(t => t.id === item.id)
+        )
+
+        setOptions(uniqueOptions)
       }
     } catch (error) {
       console.error('Error fetching departemen:', error)
@@ -29,18 +34,34 @@ export default function DepartemenSelect({ divisiId, onSelect }) {
   }
 
   React.useEffect(() => {
-    if (open) {
-      if (divisiId) {
-        fetchData(inputValue, divisiId)
-      }
+    if (open && divisiId) {
+      fetchData(inputValue, divisiId)
     } else {
       setOptions([])
+      setSelectedValue(null)
     }
   }, [open, inputValue, divisiId])
+
+  React.useEffect(() => {
+    const loadData = async () => {
+      if (!value && !divisiId) return
+      await fetchData('', divisiId)
+    }
+
+    loadData()
+  }, [value, divisiId])
+
+  React.useEffect(() => {
+    if (!value || options.length === 0) return
+    const foundOption = options.find(option => option.id === value) || null
+
+    setSelectedValue(foundOption)
+  }, [value, options])
 
   return (
     <Autocomplete
       open={open}
+      value={selectedValue}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
@@ -55,6 +76,11 @@ export default function DepartemenSelect({ divisiId, onSelect }) {
       }}
       options={options}
       loading={loading}
+      renderOption={(props, option) => (
+        <li {...props} key={option.id}>
+          {option.nama}
+        </li>
+      )}
       renderInput={params => (
         <TextField
           {...params}

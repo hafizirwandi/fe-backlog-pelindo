@@ -157,3 +157,136 @@ export const createTemuan = async dataTemuan => {
     }
   }
 }
+
+export const findTemuan = async id => {
+  const token = Cookies.get('token')
+
+  let urlRequest = `${url}v1/temuan/${id}`
+
+  try {
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return findTemuan(id)
+      } else {
+        throw new Error('Session expired, please login again fuck.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || response.status != 200) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      data: data.data
+    }
+  } catch (error) {
+    return {
+      status: false,
+      message: error
+    }
+  }
+}
+
+export const updateTemuan = async (id, dataTemuan) => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/${id}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return updateTemuan(id, dataTemuan)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataTemuan)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return updateTemuan(id, dataTemuan)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal delete data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (err) {
+    return {
+      status: false,
+      message: err
+    }
+  }
+}
+
+export const deleteTemuan = async id => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/${id}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return deleteTemuan(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return deleteTemuan(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal delete data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (err) {
+    return {
+      status: false,
+      data: [],
+      message: err
+    }
+  }
+}

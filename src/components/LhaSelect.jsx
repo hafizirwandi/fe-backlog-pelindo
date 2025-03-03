@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 import { dataLha } from '@/utils/lha'
 
-export default function LhaSelect({ onSelect }) {
+export default function LhaSelect({ value, onSelect }) {
   const [open, setOpen] = React.useState(false)
   const [options, setOptions] = React.useState([])
   const [loading, setLoading] = React.useState(false)
@@ -43,9 +43,27 @@ export default function LhaSelect({ onSelect }) {
     return () => clearTimeout(timeoutId)
   }, [open, inputValue])
 
+  React.useEffect(() => {
+    const loadData = async () => {
+      if (!value) return
+      await fetchData('')
+    }
+
+    loadData()
+  }, [value])
+
+  React.useEffect(() => {
+    if (!value || options.length === 0) return // Pastikan ada value dan options tidak kosong
+
+    const foundOption = options.find(option => option.id === value) || null
+
+    setSelectedValue(foundOption)
+  }, [value, options])
+
   return (
     <Autocomplete
       open={open}
+      value={selectedValue}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
@@ -62,7 +80,6 @@ export default function LhaSelect({ onSelect }) {
       }}
       renderOption={(props, option) => (
         <li {...props} key={option.id}>
-          {' '}
           {option.no_lha} - {option.judul}
         </li>
       )}
