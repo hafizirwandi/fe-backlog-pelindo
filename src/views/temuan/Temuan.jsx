@@ -562,36 +562,38 @@ export default function Findings() {
                   )}
                 </Grid>
                 <Grid size={{ xs: 12, md: 8 }}>
-                  <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    columnVisibilityModel={{ id: false }}
-                    loading={loading}
-                    paginationMode='server'
-                    rowCount={totalRows}
-                    pagination
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={newModel => setPaginationModel(newModel)}
-                    pageSizeOptions={[5, 10, 20, 50]}
-                    pageSize={pageSize}
-                    slots={{
-                      toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />,
-                      pagination: CustomPagination
-                    }}
-                  />
+                  <Box sx={{ height: 'auto', minHeight: 400 }}>
+                    <DataGrid
+                      rows={rows}
+                      columns={columns}
+                      columnVisibilityModel={{ id: false }}
+                      loading={loading}
+                      paginationMode='server'
+                      rowCount={totalRows}
+                      pagination
+                      paginationModel={paginationModel}
+                      onPaginationModelChange={newModel => setPaginationModel(newModel)}
+                      pageSizeOptions={[5, 10, 20, 50]}
+                      pageSize={pageSize}
+                      slots={{
+                        toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />,
+                        pagination: CustomPagination
+                      }}
+                    />
+                  </Box>
                 </Grid>
               </Grid>
             </CardContent>
           </Card>
         </Grid>
         {/* <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader title='Rekomendasi' />
-            <CardContent>
+                  <Card>
+                  <CardHeader title='Rekomendasi' />
+                  <CardContent>
 
-            </CardContent>
-          </Card>
-        </Grid> */}
+                  </CardContent>
+                  </Card>
+                </Grid> */}
       </Grid>
     </>
   )
