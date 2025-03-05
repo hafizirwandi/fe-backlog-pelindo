@@ -1,0 +1,533 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Box,
+  Divider,
+  Grid2,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Chip
+} from '@mui/material'
+import Swal from 'sweetalert2'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import dayjs from 'dayjs'
+import { Edit, Delete, Visibility as VisibilityIcon } from '@mui/icons-material'
+
+import { DataGrid, gridClasses } from '@mui/x-data-grid'
+
+import { set } from 'js-cookie'
+
+import { findTemuan } from '@/utils/temuan'
+import QuillEditor from '@/components/QuillEditor'
+import {
+  createRekomendasi,
+  dataRekomendasi,
+  deleteRekomendasi,
+  findRekomendasi,
+  updateRekomendasi
+} from '@/utils/rekomendasi'
+
+dayjs.locale('id')
+
+const statusColor = {
+  0: 'secondary',
+  1: 'primary',
+  2: 'success',
+  3: 'error'
+}
+
+export default function DetailTemuan({ id }) {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
+  const [detailData, setDetailData] = useState(null)
+
+  const [isEdit, setIsEdit] = useState(false)
+
+  const [loading, setLoading] = useState(false)
+
+  const [rows, setRows] = useState([])
+
+  const [formData, setFormData] = useState({
+    temuan_id: '',
+    nomor: '',
+    deskripsi: '',
+    batas_tanggal: '',
+    tanggal_selesai: '',
+    status: 0
+  })
+
+  const fetchDetailData = useCallback(async idTemuan => {
+    try {
+      setLoading(true)
+      const response = await findTemuan(idTemuan)
+
+      if (response.status) {
+        setDetailData(response.data)
+      } else {
+        Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      }
+    } catch (error) {
+      setLoading(false)
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchRekomendasiData = async idTemuan => {
+    try {
+      const response = await dataRekomendasi(idTemuan)
+
+      if (response.status) {
+        return response.data.map((item, index) => ({
+          ...item,
+          no: index + 1
+        }))
+      } else {
+        Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    }
+  }
+
+  useEffect(() => {
+    fetchDetailData(id)
+    fetchRekomendasiData(id).then(data => setRows(data))
+    setFormData(prev => ({ ...prev, temuan_id: id }))
+  }, [id, fetchDetailData])
+
+  if (!detailData) {
+    return null
+  }
+
+  const columns = [
+    { field: 'id', headerName: 'ID', hide: true },
+    {
+      field: 'no',
+      headerName: 'No',
+      width: 50,
+      headerAlign: 'center',
+      align: 'center'
+    },
+    { field: 'nomor', headerName: 'Nomor Rekomendasi', width: 150 },
+    {
+      field: 'deskripsi',
+      headerName: 'Deskripsi',
+      width: 300,
+      renderCell: params => (
+        <div
+          style={{
+            paddingLeft: 8,
+            paddingRight: 8
+          }}
+          dangerouslySetInnerHTML={{ __html: params.value }}
+        />
+      )
+    },
+    { field: 'batas_tanggal', headerName: 'Batas Tanggal', width: 150 },
+    { field: 'tanggal_selesai', headerName: 'Tanggal Selesai', width: 150 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 100,
+      headerAlign: 'center',
+      align: 'center',
+      alignItems: 'center',
+      renderCell: params => (
+        <Chip
+          label={params.row.status_name ?? '-'}
+          variant='outlined'
+          color={statusColor[params.row.status]}
+          size='small'
+        />
+      )
+    },
+    {
+      field: 'actions',
+      headerName: 'Aksi',
+      width: 150,
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: params => (
+        <>
+          <IconButton
+            size='small'
+            color='warning'
+            onClick={() => handleEdit(params.row.id)}
+            sx={{ width: 24, height: 24 }}
+          >
+            <Edit fontSize='small' />
+          </IconButton>
+          <IconButton
+            size='small'
+            color='error'
+            onClick={() => handleDeleteRekomendasi(params.row.id)}
+            sx={{ width: 24, height: 24 }}
+          >
+            <Delete fontSize='small' />
+          </IconButton>
+        </>
+      )
+    }
+  ]
+
+  const handleCreateRekomendasi = async () => {
+    const dataRekomendasi = {
+      id: formData.id,
+      temuan_id: formData.temuan_id,
+      nomor: formData.nomor,
+      deskripsi: formData.deskripsi,
+      batas_tanggal: formData.batas_tanggal,
+      tanggal_selesai: formData.tanggal_selesai,
+      status: formData.status
+    }
+
+    setLoading(true)
+
+    try {
+      let res = null
+
+      if (formData.id) {
+        res = await updateRekomendasi(dataRekomendasi)
+      } else {
+        res = await createRekomendasi(dataRekomendasi)
+      }
+
+      if (res.status) {
+        setIsEdit(false)
+
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1000,
+          backdrop: false
+        })
+
+        fetchRekomendasiData(formData.temuan_id).then(data => setRows(data))
+
+        setFormData({
+          id: '',
+          temuan_id: formData.temuan_id,
+          nomor: '',
+          deskripsi: '',
+          batas_tanggal: '',
+          tanggal_selesai: '',
+          status: 0
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEdit = async id => {
+    try {
+      const res = await findRekomendasi(id)
+
+      if (res.status) {
+        setFormData(res.data)
+        setIsEdit(true)
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    }
+  }
+
+  const handleDeleteRekomendasi = async id => {
+    setLoading(true)
+
+    console.log(formData.temuan_id)
+
+    const result = await Swal.fire({
+      title: 'Konfirmasi?',
+      text: `Apakah anda yakin ingin menghapus Rekomendasi ini!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const res = await deleteRekomendasi(id)
+
+        if (!res.status) {
+          throw new Error(res.message)
+        }
+
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false
+        })
+
+        console.log(formData.temuan_id)
+
+        fetchRekomendasiData(formData.temuan_id).then(data => setRows(data))
+
+        setFormData({
+          id: '',
+          temuan_id: formData.temuan_id,
+          nomor: '',
+          deskripsi: '',
+          batas_tanggal: '',
+          tanggal_selesai: '',
+          status: 0
+        })
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: err.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    setLoading(false)
+  }
+
+  return (
+    <Card>
+      <CardHeader title='Detail Temuan' />
+      <CardContent>
+        <Grid2 container spacing={5}>
+          <Grid2 size={{ xs: 12, md: 5 }}>
+            <Typography variant='h6' gutterBottom>
+              LHA
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.lha}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Nomor
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.nomor}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Judul
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.judul}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Deskripsi
+            </Typography>
+            <Box sx={{ mt: 1 }}>
+              <Box dangerouslySetInnerHTML={{ __html: detailData.deskripsi ?? '-' }} />
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Unit
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.unit}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Divisi
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.divisi}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Departemen
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.departemen}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant='h6' gutterBottom>
+              Status
+            </Typography>
+            <Typography variant='body1' gutterBottom>
+              {detailData.status_name}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, md: 7 }}>
+            <Box sx={{ height: 'auto', minHeight: 400 }}>
+              <Typography variant='h6' gutterBottom>
+                Rekomendasi
+              </Typography>
+              <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
+                Tambah Rekomendasi
+              </Button>
+              <Box sx={{ mt: 2 }}>
+                <Divider sx={{ my: 2 }} />
+              </Box>
+              <DataGrid
+                loading={loading}
+                columnVisibilityModel={{ id: false }}
+                rows={rows}
+                columns={columns}
+                pageSize={5}
+                rowsPerPageOptions={[5]}
+                getRowHeight={() => 'auto'}
+                sx={{
+                  [`& .${gridClasses.cell}`]: {
+                    py: 3
+                  }
+                }}
+              />
+            </Box>
+          </Grid2>
+          <Grid2 size={{ xs: 12 }}>
+            <Dialog
+              fullScreen={fullScreen}
+              aria-labelledby='responsive-dialog-title'
+              open={isEdit}
+              onClose={() => setIsEdit(false)}
+              aria-describedby='dialog-description'
+            >
+              <DialogTitle>Form Rekomendasi</DialogTitle>
+              <DialogContent>
+                <TextField
+                  fullWidth
+                  label='Nomor'
+                  variant='outlined'
+                  margin='normal'
+                  value={formData.nomor}
+                  onChange={e => setFormData({ ...formData, nomor: e.target.value })}
+                />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      mt: 2,
+                      flexDirection: { xs: 'column', sm: 'row' }
+                    }}
+                  >
+                    <DatePicker
+                      label='Batas Tanggal'
+                      value={formData.batas_tanggal ? dayjs(formData.batas_tanggal) : null}
+                      format='DD/MM/YYYY'
+                      onChange={newValue =>
+                        setFormData({
+                          ...formData,
+                          batas_tanggal: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                        })
+                      }
+                      slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                      sx={{ width: '100%' }}
+                    />
+
+                    <DatePicker
+                      label='Tanggal Selesai'
+                      value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
+                      format='DD/MM/YYYY'
+                      onChange={newValue =>
+                        setFormData({
+                          ...formData,
+                          tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                        })
+                      }
+                      slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                      sx={{ width: '100%' }}
+                    />
+                  </Box>
+                </LocalizationProvider>
+                <Typography variant='body2' sx={{ mt: 2 }}>
+                  Rekomendasi
+                </Typography>
+                <Box>
+                  <QuillEditor
+                    value={formData.deskripsi}
+                    onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
+                  />
+                </Box>
+                <FormControl fullWidth margin='normal'>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    id='demo-simple-select'
+                    value={formData.status}
+                    label='Status'
+                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <MenuItem value={0} selected>
+                      BD
+                    </MenuItem>
+                    <MenuItem value={1}>BS</MenuItem>
+                    <MenuItem value={2}>Selesai</MenuItem>
+                    <MenuItem value={3}>Batal</MenuItem>
+                  </Select>
+                </FormControl>
+              </DialogContent>
+              <DialogActions>
+                <Button variant='contained' color='secondary' onClick={() => setIsEdit(false)}>
+                  Close
+                </Button>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  color='primary'
+                  onClick={handleCreateRekomendasi}
+                  disabled={loading}
+                  loading={loading}
+                >
+                  Submit
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Grid2>
+        </Grid2>
+      </CardContent>
+    </Card>
+  )
+}

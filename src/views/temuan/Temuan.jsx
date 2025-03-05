@@ -10,19 +10,11 @@ import {
   TextField,
   Button,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Card,
   CardContent,
   CardHeader,
   Stack,
   IconButton,
-  TableRow,
-  Table,
-  TableHead,
-  TableCell,
-  TableBody,
   Chip,
   useMediaQuery,
   Pagination,
@@ -35,14 +27,14 @@ import { DataGrid, gridPageCountSelector, GridPagination, useGridApiContext, use
 import { Delete, Edit } from '@mui/icons-material'
 import { useDebouncedCallback } from '@coreui/react-pro'
 
-import CustomIconButton from '@core/components/mui/IconButton'
-import { dataLha } from '@/utils/lha'
 import LHASelect from '@/components/LhaSelect'
 import { createTemuan, dataTemuan, dataTemuanByLha, deleteTemuan, findTemuan, updateTemuan } from '@/utils/temuan'
 import UnitSelect from '@/components/UnitSelect'
 import QuillEditor from '@/components/QuillEditor'
 import DivisiSelect from '@/components/DivisiSelect'
 import DepartemenSelect from '@/components/DepartemenSelect'
+import DetailTemuan from './Rekomendasi'
+import { useAuth } from '@/context/AuthContext'
 
 const CustomToolbar = ({ searchQuery, setSearchQuery }) => {
   const [localSearch, setLocalSearch] = useState(searchQuery)
@@ -77,6 +69,7 @@ const statusColor = {
 }
 
 export default function Findings() {
+  const { user } = useAuth()
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -105,6 +98,8 @@ export default function Findings() {
   const isMobile = useMediaQuery('(max-width:600px)')
   const isTablet = useMediaQuery('(max-width:960px)')
   const pageSize = isMobile ? 5 : isTablet ? 10 : 20
+
+  const [temuanId, setTemuanId] = useState(null)
 
   const fetchData = useCallback(
     lha_id => {
@@ -191,12 +186,12 @@ export default function Findings() {
   const columns = [
     { field: 'id', headerName: 'ID', hide: true },
     { field: 'no', headerName: 'No', width: 70 },
-    { field: 'nomor', headerName: 'No. Temuan', flex: 1 },
+    { field: 'nomor', headerName: 'No. Temuan', width: 150 },
     { field: 'judul', headerName: 'Judul', flex: 1 },
     {
       field: 'status',
       headerName: 'Status',
-      flex: 1,
+      width: 150,
       renderCell: params => (
         <Chip
           label={params.row.status_name ?? '-'}
@@ -209,6 +204,7 @@ export default function Findings() {
     {
       field: 'actions',
       headerName: 'Aksi',
+      width: 150,
       renderCell: params => (
         <>
           <IconButton
@@ -464,6 +460,19 @@ export default function Findings() {
     setLoading(false)
   }
 
+  const handleDetail = async id => {
+    setTemuanId(id)
+  }
+
+  const responsiveTableTemuan = () => {
+    // if (user?.permissions?.includes('create temuan')) {
+    return 8
+
+    // }
+
+    return 12
+  }
+
   return (
     <>
       <Grid container spacing={2}>
@@ -472,6 +481,7 @@ export default function Findings() {
             <CardHeader title='Temuan' />
             <CardContent>
               <Grid container spacing={5}>
+                {/* {user?.permissions?.includes('create temuan') && ( */}
                 <Grid size={{ xs: 12, md: 4 }}>
                   <FormControl fullWidth margin='normal'>
                     <LHASelect value={formData.lha_id} onSelect={handleLha} />
@@ -561,7 +571,8 @@ export default function Findings() {
                     </Button>
                   )}
                 </Grid>
-                <Grid size={{ xs: 12, md: 8 }}>
+                {/* )} */}
+                <Grid size={{ xs: 12, md: responsiveTableTemuan() }}>
                   <Box sx={{ height: 'auto', minHeight: 400 }}>
                     <DataGrid
                       rows={rows}
@@ -573,7 +584,7 @@ export default function Findings() {
                       pagination
                       paginationModel={paginationModel}
                       onPaginationModelChange={newModel => setPaginationModel(newModel)}
-                      pageSizeOptions={[5, 10, 20, 50]}
+                      pageSizeOptions={[5, 10, 20, 50, 100]}
                       pageSize={pageSize}
                       slots={{
                         toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />,
@@ -586,14 +597,12 @@ export default function Findings() {
             </CardContent>
           </Card>
         </Grid>
-        {/* <Grid size={{ xs: 12 }}>
-                  <Card>
-                  <CardHeader title='Rekomendasi' />
-                  <CardContent>
 
-                  </CardContent>
-                  </Card>
-                </Grid> */}
+        {temuanId && (
+          <Grid size={{ xs: 12 }}>
+            <DetailTemuan id={temuanId} />
+          </Grid>
+        )}
       </Grid>
     </>
   )
