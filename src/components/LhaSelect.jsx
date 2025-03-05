@@ -6,7 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 import { dataLha } from '@/utils/lha'
 
-export default function LhaSelect({ value, onSelect }) {
+export default function LhaSelect({ value, onSelect, disabled }) {
   const [open, setOpen] = React.useState(false)
   const [options, setOptions] = React.useState([])
   const [loading, setLoading] = React.useState(false)
@@ -62,6 +62,7 @@ export default function LhaSelect({ value, onSelect }) {
 
   return (
     <Autocomplete
+      disabled={disabled}
       open={open}
       value={selectedValue}
       onOpen={() => setOpen(true)}

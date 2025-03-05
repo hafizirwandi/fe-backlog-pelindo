@@ -184,7 +184,7 @@ export default function DetailTemuan({ id }) {
       align: 'center',
       renderCell: params => (
         <>
-          {user?.permissions?.includes('update rekomendasi') && (
+          {user?.permissions?.includes('update rekomendasi') && detailData.status === '0' && (
             <IconButton
               size='small'
               color='warning'
@@ -194,7 +194,7 @@ export default function DetailTemuan({ id }) {
               <Edit fontSize='small' />
             </IconButton>
           )}
-          {user?.permissions?.includes('delete rekomendasi') && (
+          {user?.permissions?.includes('delete rekomendasi') && detailData.status === '0' && (
             <IconButton
               size='small'
               color='error'
@@ -346,7 +346,7 @@ export default function DetailTemuan({ id }) {
       <CardHeader
         title='Detail Temuan'
         action={
-          <Button variant='contained' color='primary' href={`/lha/${id}/detail`}>
+          <Button variant='contained' color='primary' href={`/lha/${detailData.lha_id}/detail`}>
             Lihat Detail LHA
           </Button>
         }
@@ -415,7 +415,7 @@ export default function DetailTemuan({ id }) {
               <Typography variant='h6' gutterBottom>
                 Rekomendasi
               </Typography>
-              {user?.permissions?.includes('create rekomendasi') && (
+              {user?.permissions?.includes('create rekomendasi') && detailData.status === '0' && (
                 <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
                   Tambah Rekomendasi
                 </Button>

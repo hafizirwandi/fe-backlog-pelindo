@@ -4,6 +4,10 @@ import React, { use, useCallback, useEffect, useState } from 'react'
 import { notFound, useParams, useRouter } from 'next/navigation'
 
 import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Box,
   Container,
   Typography,
@@ -37,7 +41,9 @@ import {
   ListItemText,
   Collapse,
   Paper,
-  TableContainer
+  TableContainer,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Grid from '@mui/material/Grid2'
@@ -45,11 +51,13 @@ import Grid from '@mui/material/Grid2'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
-import { detailsLha, findLha } from '@/utils/lha'
+import Swal from 'sweetalert2'
+
+import { detailsLha, findLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
+import QuillEditor from '@/components/QuillEditor'
 
 function Row({ row }) {
-  const { user, setUser } = useAuth()
   const [open, setOpen] = useState(false)
 
   return (
@@ -86,10 +94,17 @@ function Row({ row }) {
 
 export default function DetailLha() {
   const router = useRouter()
-  const [formData, setFormData] = useState({ id: '', name: '', unit: '', division: '' }) // State untuk form
-  const [unit, setUnit] = useState([])
-  const [division, setDivision] = useState([])
-  const [open, setOpen] = useState(false)
+  const theme = useTheme()
+  const [openDialog, setOpenDialog] = useState(false)
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
+  const [loading, setLoading] = useState(false)
+
+  const { user, setUser } = useAuth()
+
+  const [formData, setFormData] = useState({
+    lha_id: '',
+    keterangan: ''
+  })
 
   const [dataLha, setDataLha] = useState({
     id: '',
@@ -104,21 +119,6 @@ export default function DetailLha() {
     status_name: '',
     temuan: []
   })
-
-  const data = [
-    {
-      deskripsi: 'Lorem Ipsum is simply dummy text of the printing industry.',
-      dueDate: '20 Jan 2024',
-      status: 'Selesai',
-      tindakLanjut: ['Review dokumen', 'Revisi laporan', 'Finalisasi data']
-    },
-    {
-      deskripsi: 'Another example description goes here.',
-      dueDate: '25 Jan 2024',
-      status: 'Dalam Proses',
-      tindakLanjut: ['Diskusi dengan tim', 'Analisis lebih lanjut']
-    }
-  ]
 
   const id = useParams()
 
@@ -138,7 +138,9 @@ export default function DetailLha() {
           deskripsi: data.deskripsi ?? '-',
           stage_name: data.stage_name ?? '-',
           status_name: data.status_name ?? '-',
-          temuan: data.temuan
+          temuan: data.temuan,
+          last_stage: data.last_stage,
+          stage: data.stage
         })
       } else {
         router.replace('/not-found')
@@ -150,6 +152,80 @@ export default function DetailLha() {
     Lha()
   }, [Lha])
 
+  const handleTeruskan = async () => {
+    const sendLha = {
+      lha_id: dataLha.id,
+      keterangan: formData.keterangan
+    }
+
+    setLoading(true)
+
+    try {
+      let res = null
+
+      console.log('dataLha', dataLha)
+      console.log('role', user?.role?.includes('supervisor'))
+      console.log('permissions', user?.permissions?.includes('update status_lha'))
+
+      if (
+        dataLha.last_stage == 1 &&
+        user?.role?.includes('admin') &&
+        user?.permissions?.includes('update status_lha')
+      ) {
+        res = await sendLhaSpv(sendLha)
+      } else if (
+        dataLha.last_stage == 2 &&
+        user?.role?.includes('supervisor') &&
+        user?.permissions?.includes('update status_lha')
+      ) {
+        res = await sendLhaPic(sendLha)
+      }
+
+      if (res.status) {
+        setOpenDialog(false)
+
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1000,
+          backdrop: false
+        })
+
+        detailsLha(dataLha.id).then(res => {
+          if (res.status) {
+            const data = res.data
+
+            setDataLha({
+              id: data.id,
+              judul: data.judul ?? '-',
+              nomor: data.no_lha ?? '-',
+              tanggal: data.tanggal ?? new Date().toISOString().split('T')[0],
+              periode: data.periode ?? '-',
+              deskripsi: data.deskripsi ?? '-',
+              stage_name: data.stage_name ?? '-',
+              status_name: data.status_name ?? '-',
+              temuan: data.temuan
+            })
+          } else {
+            router.replace('/not-found')
+          }
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const roleId = user?.roleAndPermissions?.[0]?.id
+
   return (
     <>
       <Typography variant='h4' gutterBottom>
@@ -159,9 +235,11 @@ export default function DetailLha() {
       <Grid container spacing={2} sx={{ mt: 5, mb: 5 }}>
         <Grid size={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='h6'>Detail LHA</Typography>
-          <Button variant='contained' color='primary' onClick={() => console.log('Tombol diklik!')}>
-            Teruskan
-          </Button>
+          {user?.permissions?.includes('update status_lha') && dataLha?.last_stage == roleId && (
+            <Button variant='contained' color='primary' onClick={() => setOpenDialog(true)}>
+              Teruskan
+            </Button>
+          )}
         </Grid>
         <Grid size={12}>
           <Table>
@@ -207,6 +285,15 @@ export default function DetailLha() {
                   <Box dangerouslySetInnerHTML={{ __html: dataLha.deskripsi }} />
                 </TableCell>
               </TableRow>
+              {dataLha?.stage?.keterangan && (
+                <TableRow>
+                  <TableCell>Keterangan</TableCell>
+                  <TableCell>:</TableCell>
+                  <TableCell>
+                    <Box dangerouslySetInnerHTML={{ __html: dataLha.stage.keterangan }} />
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </Grid>
@@ -261,6 +348,46 @@ export default function DetailLha() {
           </Grid>
         </Box>
       ))}
+      <Grid>
+        <Dialog
+          fullScreen={fullScreen}
+          aria-labelledby='responsive-dialog-title'
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          aria-describedby='dialog-description'
+        >
+          <DialogTitle>Konfirmasi</DialogTitle>
+          <DialogContent>
+            <Typography variant='h6' sx={{ mt: 2 }}>
+              And Yakin ingin meneruskan LHA ini?
+            </Typography>
+            <Typography variant='body2' sx={{ mt: 2 }}>
+              Keterangan
+            </Typography>
+            <Box>
+              <QuillEditor
+                value={formData.keterangan}
+                onChange={content => setFormData(prev => ({ ...prev, keterangan: content }))}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button variant='contained' color='secondary' onClick={() => setOpenDialog(false)}>
+              Close
+            </Button>
+            <Button
+              type='submit'
+              variant='contained'
+              color='primary'
+              onClick={handleTeruskan}
+              disabled={loading}
+              loading={loading}
+            >
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Grid>
     </>
   )
 }

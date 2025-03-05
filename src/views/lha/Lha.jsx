@@ -18,12 +18,13 @@ import {
   Box,
   useMediaQuery,
   Pagination,
-  PaginationItem
+  PaginationItem,
+  Tooltip
 } from '@mui/material'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, gridPageCountSelector, GridPagination, useGridApiContext, useGridSelector } from '@mui/x-data-grid'
-import { Delete, Edit } from '@mui/icons-material'
+import { Delete, Edit, ListAlt, PlaylistAdd } from '@mui/icons-material'
 
 import { useDebouncedCallback } from '@coreui/react-pro'
 
@@ -136,6 +137,10 @@ export default function Lha() {
     fetchData()
   }, [fetchData])
 
+  const handleClick = id => {
+    window.location.href = `/temuan?lha=${id}`
+  }
+
   const columns = [
     { field: 'id', headerName: 'ID', hide: true },
     {
@@ -174,37 +179,57 @@ export default function Lha() {
     {
       field: 'actions',
       headerName: 'Aksi',
+      width: 150,
       renderCell: params => (
         <>
           {user?.permissions?.includes('read lha') && (
-            <IconButton
-              size='small'
-              color='secondary'
-              sx={{ width: 24, height: 24 }}
-              onClick={() => handleDetail(params.row.id)}
-            >
-              <VisibilityIcon fontSize='small' />
-            </IconButton>
+            <Tooltip title='Lihat detail LHA' arrow>
+              <IconButton
+                size='small'
+                color='secondary'
+                sx={{ width: 24, height: 24 }}
+                onClick={() => handleDetail(params.row.id)}
+              >
+                <VisibilityIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
           )}
-          {user?.permissions?.includes('update lha') && (
-            <IconButton
-              size='small'
-              color='primary'
-              onClick={() => handleEdit(params.row.id)}
-              sx={{ width: 24, height: 24 }}
-            >
-              <Edit fontSize='small' />
-            </IconButton>
+
+          {user?.permissions?.includes('read temuan') && (
+            <Tooltip title='Tambah Temuan' arrow>
+              <IconButton
+                size='small'
+                color='primary'
+                sx={{ width: 24, height: 24 }}
+                onClick={() => handleClick(params.row.id)}
+              >
+                <PlaylistAdd fontSize='small' />
+              </IconButton>
+            </Tooltip>
           )}
-          {user?.permissions?.includes('delete lha') && (
-            <IconButton
-              size='small'
-              color='warning'
-              onClick={() => handleDelete(params.row.id)}
-              sx={{ width: 24, height: 24 }}
-            >
-              <Delete fontSize='small' />
-            </IconButton>
+          {user?.permissions?.includes('update lha') && params.row.status === '0' && (
+            <Tooltip title='Edit LHA' arrow>
+              <IconButton
+                size='small'
+                color='warning'
+                onClick={() => handleEdit(params.row.id)}
+                sx={{ width: 24, height: 24 }}
+              >
+                <Edit fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          )}
+          {user?.permissions?.includes('delete lha') && params.row.status === '0' && (
+            <Tooltip title='Hapus LHA' arrow>
+              <IconButton
+                size='small'
+                color='error'
+                onClick={() => handleDelete(params.row.id)}
+                sx={{ width: 24, height: 24 }}
+              >
+                <Delete fontSize='small' />
+              </IconButton>
+            </Tooltip>
           )}
         </>
       )

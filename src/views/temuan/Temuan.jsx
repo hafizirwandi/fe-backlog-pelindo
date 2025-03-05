@@ -1,7 +1,7 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import {
   Box,
@@ -71,10 +71,12 @@ const statusColor = {
 export default function Findings() {
   const { user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const paramLha = searchParams.get('lha')
 
   const [formData, setFormData] = useState({
     id: '',
-    lha_id: '',
+    lha_id: paramLha,
     unit: '',
     divisi: '',
     departemen: '',
@@ -100,6 +102,8 @@ export default function Findings() {
   const pageSize = isMobile ? 5 : isTablet ? 10 : 20
 
   const [temuanId, setTemuanId] = useState(null)
+
+  const [isCanCreate, setIsCanCreate] = useState(false)
 
   const fetchData = useCallback(
     lha_id => {
@@ -179,9 +183,16 @@ export default function Findings() {
   }
 
   useEffect(() => {
+    if (paramLha) {
+      setFormData(prev => ({
+        ...prev,
+        lha_id: paramLha
+      }))
+    }
+
     fetchData(formData.lha_id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchData])
+  }, [fetchData, paramLha])
 
   const columns = [
     { field: 'id', headerName: 'ID', hide: true },
@@ -217,7 +228,7 @@ export default function Findings() {
               <VisibilityIcon fontSize='small' />
             </IconButton>
           )}
-          {user?.permissions?.includes('update temuan') && (
+          {user?.permissions?.includes('update temuan') && params.row.status === '0' && (
             <IconButton
               size='small'
               color='primary'
@@ -227,7 +238,7 @@ export default function Findings() {
               <Edit fontSize='small' />
             </IconButton>
           )}
-          {user?.permissions?.includes('delete temuan') && (
+          {user?.permissions?.includes('delete temuan') && params.row.status === '0' && (
             <IconButton
               size='small'
               color='warning'
@@ -571,6 +582,7 @@ export default function Findings() {
                         fullWidth
                         sx={{ mt: 2 }}
                         onClick={handleCreateTemuan}
+                        disabled={isCanCreate}
                       >
                         Submit
                       </Button>
