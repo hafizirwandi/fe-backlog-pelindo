@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie'
 
-import { refreshToken } from './auth'
+import { redirectToLogin, refreshToken } from './auth'
 
 const url = process.env.NEXT_PUBLIC_API_BASE_URL
 

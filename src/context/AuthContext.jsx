@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect, useState } from 'react'
 
 import { usePathname } from 'next/navigation'
 
+import { NextResponse } from 'next/server'
+
 import Cookies from 'js-cookie'
 
 const AuthContext = createContext()

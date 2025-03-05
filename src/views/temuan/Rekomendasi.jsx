@@ -32,8 +32,6 @@ import { Edit, Delete, Visibility as VisibilityIcon } from '@mui/icons-material'
 
 import { DataGrid, gridClasses } from '@mui/x-data-grid'
 
-import { set } from 'js-cookie'
-
 import { findTemuan } from '@/utils/temuan'
 import QuillEditor from '@/components/QuillEditor'
 import {
@@ -43,6 +41,7 @@ import {
   findRekomendasi,
   updateRekomendasi
 } from '@/utils/rekomendasi'
+import { useAuth } from '@/context/AuthContext'
 
 dayjs.locale('id')
 
@@ -54,6 +53,7 @@ const statusColor = {
 }
 
 export default function DetailTemuan({ id }) {
+  const { user } = useAuth()
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [detailData, setDetailData] = useState(null)
@@ -184,22 +184,26 @@ export default function DetailTemuan({ id }) {
       align: 'center',
       renderCell: params => (
         <>
-          <IconButton
-            size='small'
-            color='warning'
-            onClick={() => handleEdit(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Edit fontSize='small' />
-          </IconButton>
-          <IconButton
-            size='small'
-            color='error'
-            onClick={() => handleDeleteRekomendasi(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Delete fontSize='small' />
-          </IconButton>
+          {user?.permissions?.includes('update rekomendasi') && (
+            <IconButton
+              size='small'
+              color='warning'
+              onClick={() => handleEdit(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Edit fontSize='small' />
+            </IconButton>
+          )}
+          {user?.permissions?.includes('delete rekomendasi') && (
+            <IconButton
+              size='small'
+              color='error'
+              onClick={() => handleDeleteRekomendasi(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Delete fontSize='small' />
+            </IconButton>
+          )}
         </>
       )
     }
@@ -339,7 +343,14 @@ export default function DetailTemuan({ id }) {
 
   return (
     <Card>
-      <CardHeader title='Detail Temuan' />
+      <CardHeader
+        title='Detail Temuan'
+        action={
+          <Button variant='contained' color='primary' href={`/lha/${id}/detail`}>
+            Lihat Detail LHA
+          </Button>
+        }
+      />
       <CardContent>
         <Grid2 container spacing={5}>
           <Grid2 size={{ xs: 12, md: 5 }}>
@@ -404,9 +415,11 @@ export default function DetailTemuan({ id }) {
               <Typography variant='h6' gutterBottom>
                 Rekomendasi
               </Typography>
-              <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
-                Tambah Rekomendasi
-              </Button>
+              {user?.permissions?.includes('create rekomendasi') && (
+                <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
+                  Tambah Rekomendasi
+                </Button>
+              )}
               <Box sx={{ mt: 2 }}>
                 <Divider sx={{ my: 2 }} />
               </Box>
@@ -426,106 +439,108 @@ export default function DetailTemuan({ id }) {
               />
             </Box>
           </Grid2>
-          <Grid2 size={{ xs: 12 }}>
-            <Dialog
-              fullScreen={fullScreen}
-              aria-labelledby='responsive-dialog-title'
-              open={isEdit}
-              onClose={() => setIsEdit(false)}
-              aria-describedby='dialog-description'
-            >
-              <DialogTitle>Form Rekomendasi</DialogTitle>
-              <DialogContent>
-                <TextField
-                  fullWidth
-                  label='Nomor'
-                  variant='outlined'
-                  margin='normal'
-                  value={formData.nomor}
-                  onChange={e => setFormData({ ...formData, nomor: e.target.value })}
-                />
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      mt: 2,
-                      flexDirection: { xs: 'column', sm: 'row' }
-                    }}
-                  >
-                    <DatePicker
-                      label='Batas Tanggal'
-                      value={formData.batas_tanggal ? dayjs(formData.batas_tanggal) : null}
-                      format='DD/MM/YYYY'
-                      onChange={newValue =>
-                        setFormData({
-                          ...formData,
-                          batas_tanggal: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-                        })
-                      }
-                      slotProps={{ textField: { fullWidth: true } }} // Agar input full width
-                      sx={{ width: '100%' }}
-                    />
+          {user?.permissions?.includes('create rekomendasi') && (
+            <Grid2 size={{ xs: 12 }}>
+              <Dialog
+                fullScreen={fullScreen}
+                aria-labelledby='responsive-dialog-title'
+                open={isEdit}
+                onClose={() => setIsEdit(false)}
+                aria-describedby='dialog-description'
+              >
+                <DialogTitle>Form Rekomendasi</DialogTitle>
+                <DialogContent>
+                  <TextField
+                    fullWidth
+                    label='Nomor'
+                    variant='outlined'
+                    margin='normal'
+                    value={formData.nomor}
+                    onChange={e => setFormData({ ...formData, nomor: e.target.value })}
+                  />
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        mt: 2,
+                        flexDirection: { xs: 'column', sm: 'row' }
+                      }}
+                    >
+                      <DatePicker
+                        label='Batas Tanggal'
+                        value={formData.batas_tanggal ? dayjs(formData.batas_tanggal) : null}
+                        format='DD/MM/YYYY'
+                        onChange={newValue =>
+                          setFormData({
+                            ...formData,
+                            batas_tanggal: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                          })
+                        }
+                        slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                        sx={{ width: '100%' }}
+                      />
 
-                    <DatePicker
-                      label='Tanggal Selesai'
-                      value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
-                      format='DD/MM/YYYY'
-                      onChange={newValue =>
-                        setFormData({
-                          ...formData,
-                          tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-                        })
-                      }
-                      slotProps={{ textField: { fullWidth: true } }} // Agar input full width
-                      sx={{ width: '100%' }}
+                      <DatePicker
+                        label='Tanggal Selesai'
+                        value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
+                        format='DD/MM/YYYY'
+                        onChange={newValue =>
+                          setFormData({
+                            ...formData,
+                            tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                          })
+                        }
+                        slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                        sx={{ width: '100%' }}
+                      />
+                    </Box>
+                  </LocalizationProvider>
+                  <Typography variant='body2' sx={{ mt: 2 }}>
+                    Rekomendasi
+                  </Typography>
+                  <Box>
+                    <QuillEditor
+                      value={formData.deskripsi}
+                      onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
                     />
                   </Box>
-                </LocalizationProvider>
-                <Typography variant='body2' sx={{ mt: 2 }}>
-                  Rekomendasi
-                </Typography>
-                <Box>
-                  <QuillEditor
-                    value={formData.deskripsi}
-                    onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
-                  />
-                </Box>
-                <FormControl fullWidth margin='normal'>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    id='demo-simple-select'
-                    value={formData.status}
-                    label='Status'
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                  <FormControl fullWidth margin='normal'>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      id='demo-simple-select'
+                      value={formData.status}
+                      label='Status'
+                      onChange={e => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <MenuItem value={0} selected>
+                        BD
+                      </MenuItem>
+                      <MenuItem value={1}>BS</MenuItem>
+                      <MenuItem value={2}>Selesai</MenuItem>
+                      <MenuItem value={3}>Batal</MenuItem>
+                    </Select>
+                  </FormControl>
+                </DialogContent>
+                <DialogActions>
+                  <Button variant='contained' color='secondary' onClick={() => setIsEdit(false)}>
+                    Close
+                  </Button>
+                  <Button
+                    type='submit'
+                    variant='contained'
+                    color='primary'
+                    onClick={handleCreateRekomendasi}
+                    disabled={loading}
+                    loading={loading}
                   >
-                    <MenuItem value={0} selected>
-                      BD
-                    </MenuItem>
-                    <MenuItem value={1}>BS</MenuItem>
-                    <MenuItem value={2}>Selesai</MenuItem>
-                    <MenuItem value={3}>Batal</MenuItem>
-                  </Select>
-                </FormControl>
-              </DialogContent>
-              <DialogActions>
-                <Button variant='contained' color='secondary' onClick={() => setIsEdit(false)}>
-                  Close
-                </Button>
-                <Button
-                  type='submit'
-                  variant='contained'
-                  color='primary'
-                  onClick={handleCreateRekomendasi}
-                  disabled={loading}
-                  loading={loading}
-                >
-                  Submit
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </Grid2>
+                    Submit
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Grid2>
+          )}
         </Grid2>
       </CardContent>
     </Card>

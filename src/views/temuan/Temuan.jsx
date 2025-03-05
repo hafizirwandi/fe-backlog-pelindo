@@ -185,13 +185,13 @@ export default function Findings() {
 
   const columns = [
     { field: 'id', headerName: 'ID', hide: true },
-    { field: 'no', headerName: 'No', width: 70 },
-    { field: 'nomor', headerName: 'No. Temuan', width: 150 },
+    { field: 'no', headerName: 'No', width: 50 },
+    { field: 'nomor', headerName: 'No. Temuan', width: 100 },
     { field: 'judul', headerName: 'Judul', flex: 1 },
     {
       field: 'status',
       headerName: 'Status',
-      width: 150,
+      width: 100,
       renderCell: params => (
         <Chip
           label={params.row.status_name ?? '-'}
@@ -204,33 +204,39 @@ export default function Findings() {
     {
       field: 'actions',
       headerName: 'Aksi',
-      width: 150,
+      width: 100,
       renderCell: params => (
         <>
-          <IconButton
-            size='small'
-            color='secondary'
-            sx={{ width: 24, height: 24 }}
-            onClick={() => handleDetail(params.row.id)}
-          >
-            <VisibilityIcon fontSize='small' />
-          </IconButton>
-          <IconButton
-            size='small'
-            color='primary'
-            onClick={() => handleEdit(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Edit fontSize='small' />
-          </IconButton>
-          <IconButton
-            size='small'
-            color='warning'
-            onClick={() => handleDeleteTemuan(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Delete fontSize='small' />
-          </IconButton>
+          {user?.permissions?.includes('read temuan') && (
+            <IconButton
+              size='small'
+              color='secondary'
+              sx={{ width: 24, height: 24 }}
+              onClick={() => handleDetail(params.row.id)}
+            >
+              <VisibilityIcon fontSize='small' />
+            </IconButton>
+          )}
+          {user?.permissions?.includes('update temuan') && (
+            <IconButton
+              size='small'
+              color='primary'
+              onClick={() => handleEdit(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Edit fontSize='small' />
+            </IconButton>
+          )}
+          {user?.permissions?.includes('delete temuan') && (
+            <IconButton
+              size='small'
+              color='warning'
+              onClick={() => handleDeleteTemuan(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Delete fontSize='small' />
+            </IconButton>
+          )}
         </>
       )
     }
@@ -465,10 +471,9 @@ export default function Findings() {
   }
 
   const responsiveTableTemuan = () => {
-    // if (user?.permissions?.includes('create temuan')) {
-    return 8
-
-    // }
+    if (user?.permissions?.includes('create temuan')) {
+      return 8
+    }
 
     return 12
   }
@@ -481,97 +486,97 @@ export default function Findings() {
             <CardHeader title='Temuan' />
             <CardContent>
               <Grid container spacing={5}>
-                {/* {user?.permissions?.includes('create temuan') && ( */}
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <FormControl fullWidth margin='normal'>
-                    <LHASelect value={formData.lha_id} onSelect={handleLha} />
-                  </FormControl>
-                  <TextField
-                    fullWidth
-                    label='Nomor'
-                    variant='outlined'
-                    margin='normal'
-                    value={formData.nomor}
-                    onChange={e => setFormData({ ...formData, nomor: e.target.value })}
-                  />
-                  <TextField
-                    fullWidth
-                    label='Judul'
-                    variant='outlined'
-                    margin='normal'
-                    value={formData.judul}
-                    onChange={e => setFormData({ ...formData, judul: e.target.value })}
-                  />
-                  <FormControl fullWidth margin='normal'>
-                    <UnitSelect value={formData.unit} onSelect={handleUnit} />
-                  </FormControl>
-                  <FormControl fullWidth margin='normal'>
-                    <DivisiSelect value={formData.divisi} unitId={formData.unit} onSelect={handleDivisi} />
-                  </FormControl>
-                  <FormControl fullWidth margin='normal'>
-                    <DepartemenSelect
-                      value={formData.departemen}
-                      divisiId={formData.divisi}
-                      onSelect={handleDepartemen}
+                {user?.permissions?.includes('create temuan', 'update temuan') && (
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <FormControl fullWidth margin='normal'>
+                      <LHASelect value={formData.lha_id} onSelect={handleLha} />
+                    </FormControl>
+                    <TextField
+                      fullWidth
+                      label='Nomor'
+                      variant='outlined'
+                      margin='normal'
+                      value={formData.nomor}
+                      onChange={e => setFormData({ ...formData, nomor: e.target.value })}
                     />
-                  </FormControl>
-                  <Typography variant='body2' sx={{ mt: 2 }}>
-                    Deskripsi
-                  </Typography>
-                  <Box>
-                    <QuillEditor
-                      value={formData.deskripsi}
-                      onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
+                    <TextField
+                      fullWidth
+                      label='Judul'
+                      variant='outlined'
+                      margin='normal'
+                      value={formData.judul}
+                      onChange={e => setFormData({ ...formData, judul: e.target.value })}
                     />
-                  </Box>
-                  {isEdit ? (
+                    <FormControl fullWidth margin='normal'>
+                      <UnitSelect value={formData.unit} onSelect={handleUnit} />
+                    </FormControl>
+                    <FormControl fullWidth margin='normal'>
+                      <DivisiSelect value={formData.divisi} unitId={formData.unit} onSelect={handleDivisi} />
+                    </FormControl>
+                    <FormControl fullWidth margin='normal'>
+                      <DepartemenSelect
+                        value={formData.departemen}
+                        divisiId={formData.divisi}
+                        onSelect={handleDepartemen}
+                      />
+                    </FormControl>
+                    <Typography variant='body2' sx={{ mt: 2 }}>
+                      Deskripsi
+                    </Typography>
                     <Box>
+                      <QuillEditor
+                        value={formData.deskripsi}
+                        onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
+                      />
+                    </Box>
+                    {isEdit && user?.permissions?.includes('update temuan') ? (
+                      <Box>
+                        <Button
+                          type='submit'
+                          variant='contained'
+                          color='warning'
+                          fullWidth
+                          sx={{ mt: 2 }}
+                          onClick={handleUpdateTemuan}
+                        >
+                          Update
+                        </Button>
+                        <Button
+                          variant='contained'
+                          color='secondary'
+                          fullWidth
+                          sx={{ mt: 3 }}
+                          onClick={() => {
+                            setFormData({
+                              id: '',
+                              lha_id: formData.lha_id,
+                              unit: '',
+                              divisi: '',
+                              departemen: '',
+                              nomor: '',
+                              judul: '',
+                              deskripsi: ''
+                            })
+                            setIsEdit(false)
+                          }}
+                        >
+                          Batal
+                        </Button>
+                      </Box>
+                    ) : (
                       <Button
                         type='submit'
                         variant='contained'
-                        color='warning'
+                        color='primary'
                         fullWidth
                         sx={{ mt: 2 }}
-                        onClick={handleUpdateTemuan}
+                        onClick={handleCreateTemuan}
                       >
-                        Update
+                        Submit
                       </Button>
-                      <Button
-                        variant='contained'
-                        color='secondary'
-                        fullWidth
-                        sx={{ mt: 3 }}
-                        onClick={() => {
-                          setFormData({
-                            id: '',
-                            lha_id: formData.lha_id,
-                            unit: '',
-                            divisi: '',
-                            departemen: '',
-                            nomor: '',
-                            judul: '',
-                            deskripsi: ''
-                          })
-                          setIsEdit(false)
-                        }}
-                      >
-                        Batal
-                      </Button>
-                    </Box>
-                  ) : (
-                    <Button
-                      type='submit'
-                      variant='contained'
-                      color='primary'
-                      fullWidth
-                      sx={{ mt: 2 }}
-                      onClick={handleCreateTemuan}
-                    >
-                      Submit
-                    </Button>
-                  )}
-                </Grid>
-                {/* )} */}
+                    )}
+                  </Grid>
+                )}
                 <Grid size={{ xs: 12, md: responsiveTableTemuan() }}>
                   <Box sx={{ height: 'auto', minHeight: 400 }}>
                     <DataGrid

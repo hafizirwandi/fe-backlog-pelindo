@@ -46,19 +46,25 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
 import { detailsLha, findLha } from '@/utils/lha'
+import { useAuth } from '@/context/AuthContext'
 
 function Row({ row }) {
+  const { user, setUser } = useAuth()
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <TableRow>
         <TableCell sx={{ width: 40 }}>
-          <IconButton aria-label='expand row' size='small' onClick={() => setOpen(!open)}>
-            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
+          {row.tindakLanjut && (
+            <IconButton aria-label='expand row' size='small' onClick={() => setOpen(!open)}>
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          )}
         </TableCell>
-        <TableCell sx={{ width: 400 }}>{row.deskripsi}</TableCell>
+        <TableCell sx={{ width: 400 }}>
+          <Box dangerouslySetInnerHTML={{ __html: row.deskripsi ?? '-' }} />
+        </TableCell>
         <TableCell>{row.batas_tanggal}</TableCell>
         <TableCell>
           <Chip
@@ -228,7 +234,7 @@ export default function DetailLha() {
                         <TableHead>
                           <TableRow>
                             <TableCell></TableCell>
-                            <TableCell>Deskripsi</TableCell>
+                            <TableCell>Rekomendasi</TableCell>
                             <TableCell>Due Date</TableCell>
                             <TableCell>Status</TableCell>
                           </TableRow>

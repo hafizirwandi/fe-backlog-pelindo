@@ -167,7 +167,7 @@ export default function Lha() {
       flex: 1,
       renderCell: params => (
         <>
-          <Chip label='Operator' variant='outlined' color='primary' size='small' />
+          <Chip label={params.row.stage_name ?? '-'} variant='outlined' color='primary' size='small' />
         </>
       )
     },
@@ -176,15 +176,16 @@ export default function Lha() {
       headerName: 'Aksi',
       renderCell: params => (
         <>
-          <IconButton
-            size='small'
-            color='secondary'
-            sx={{ width: 24, height: 24 }}
-            onClick={() => handleDetail(params.row.id)}
-          >
-            <VisibilityIcon fontSize='small' />
-          </IconButton>
-
+          {user?.permissions?.includes('read lha') && (
+            <IconButton
+              size='small'
+              color='secondary'
+              sx={{ width: 24, height: 24 }}
+              onClick={() => handleDetail(params.row.id)}
+            >
+              <VisibilityIcon fontSize='small' />
+            </IconButton>
+          )}
           {user?.permissions?.includes('update lha') && (
             <IconButton
               size='small'
@@ -195,16 +196,16 @@ export default function Lha() {
               <Edit fontSize='small' />
             </IconButton>
           )}
-          {/* {user?.permissions?.includes('delete lha') && ( */}
-          <IconButton
-            size='small'
-            color='warning'
-            onClick={() => handleDelete(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Delete fontSize='small' />
-          </IconButton>
-          {/* )} */}
+          {user?.permissions?.includes('delete lha') && (
+            <IconButton
+              size='small'
+              color='warning'
+              onClick={() => handleDelete(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Delete fontSize='small' />
+            </IconButton>
+          )}
         </>
       )
     }
@@ -449,7 +450,7 @@ export default function Lha() {
       <Typography variant='h4' gutterBottom>
         LHA (Laporan Hasil Audit)
       </Typography>
-      {user?.permissions?.includes('create lha') && (
+      {user?.permissions?.includes('create lha', 'update lha') && (
         <Grid container spacing={2}>
           <Grid size={12}>
             <Card>
@@ -515,7 +516,7 @@ export default function Lha() {
                   </Box>
 
                   {/* Tombol Submit */}
-                  {isEdit ? (
+                  {isEdit && user?.permissions?.includes('update lha') ? (
                     <Box>
                       <Button
                         type='submit'
