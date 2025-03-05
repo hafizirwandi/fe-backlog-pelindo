@@ -20,6 +20,7 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 // Style Imports
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
+import { useAuth } from '@/context/AuthContext'
 
 const RenderExpandIcon = ({ open, transitionDuration }) => (
   <StyledVerticalNavExpandIcon open={open} transitionDuration={transitionDuration}>
@@ -31,6 +32,8 @@ const VerticalMenu = ({ scrollMenu }) => {
   // Hooks
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
+
+  const { user, loadingUser } = useAuth()
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
@@ -105,31 +108,34 @@ const VerticalMenu = ({ scrollMenu }) => {
             href='/jabatan'
           ></MenuItem>
         </SubMenu>
-        <SubMenu label='LHA' icon={<i className='tabler-clipboard-text' />}>
+        {user?.permissions?.includes('read lha') && (
+          <SubMenu label='LHA' icon={<i className='tabler-clipboard-text' />}>
+            <MenuItem
+              activeUrls={['/lha', `/lha/*`]}
+              pathname={pathname} // Current path from router or context
+              href='/lha'
+            >
+              List LHA
+            </MenuItem>
+            <MenuItem
+              activeUrls={['/lha/riwayat']}
+              pathname={pathname} // Current path from router or context
+              href='/lha/riwayat'
+            >
+              Riwayat
+            </MenuItem>
+          </SubMenu>
+        )}
+        {user?.permissions?.includes('read temuan') && (
           <MenuItem
-            activeUrls={['/lha', '/lha/detail']}
+            activeUrls={['/temuan', '/temuan/*']}
             pathname={pathname} // Current path from router or context
-            href='/lha'
+            href='/temuan'
+            icon={<i className='tabler-building' />}
           >
-            List LHA
+            Temuan
           </MenuItem>
-          <MenuItem
-            activeUrls={['/lha/riwayat']}
-            pathname={pathname} // Current path from router or context
-            href='/lha/riwayat'
-          >
-            Riwayat
-          </MenuItem>
-        </SubMenu>
-
-        <MenuItem
-          activeUrls={['/temuan', '/temuan/*']}
-          pathname={pathname} // Current path from router or context
-          href='/temuan'
-          icon={<i className='tabler-building' />}
-        >
-          Temuan
-        </MenuItem>
+        )}
         <MenuItem
           activeUrls={['/report-findings']}
           pathname={pathname} // Current path from router or context

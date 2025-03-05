@@ -167,7 +167,7 @@ export default function Lha() {
       flex: 1,
       renderCell: params => (
         <>
-          <Chip label='Operator' variant='outlined' color='primary' size='small' />
+          <Chip label={params.row.stage_name ?? '-'} variant='outlined' color='primary' size='small' />
         </>
       )
     },
@@ -176,35 +176,36 @@ export default function Lha() {
       headerName: 'Aksi',
       renderCell: params => (
         <>
-          <IconButton
-            size='small'
-            color='secondary'
-            sx={{ width: 24, height: 24 }}
-            onClick={() => handleDetail(params.row.id)}
-          >
-            <VisibilityIcon fontSize='small' />
-          </IconButton>
-
-          {/* {user?.permissions?.includes('update lha') && ( */}
-          <IconButton
-            size='small'
-            color='primary'
-            onClick={() => handleEdit(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Edit fontSize='small' />
-          </IconButton>
-          {/* )} */}
-          {/* {user?.permissions?.includes('delete lha') && ( */}
-          <IconButton
-            size='small'
-            color='warning'
-            onClick={() => handleDelete(params.row.id)}
-            sx={{ width: 24, height: 24 }}
-          >
-            <Delete fontSize='small' />
-          </IconButton>
-          {/* )} */}
+          {user?.permissions?.includes('read lha') && (
+            <IconButton
+              size='small'
+              color='secondary'
+              sx={{ width: 24, height: 24 }}
+              onClick={() => handleDetail(params.row.id)}
+            >
+              <VisibilityIcon fontSize='small' />
+            </IconButton>
+          )}
+          {user?.permissions?.includes('update lha') && (
+            <IconButton
+              size='small'
+              color='primary'
+              onClick={() => handleEdit(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Edit fontSize='small' />
+            </IconButton>
+          )}
+          {user?.permissions?.includes('delete lha') && (
+            <IconButton
+              size='small'
+              color='warning'
+              onClick={() => handleDelete(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Delete fontSize='small' />
+            </IconButton>
+          )}
         </>
       )
     }
@@ -449,122 +450,122 @@ export default function Lha() {
       <Typography variant='h4' gutterBottom>
         LHA (Laporan Hasil Audit)
       </Typography>
-      {/* {user?.permissions?.includes('create lha') && ( */}
-      <Grid container spacing={2}>
-        <Grid size={12}>
-          <Card>
-            <CardHeader title='Form LHA' />
-            <CardContent>
-              <Stack spacing={2}>
-                <Box>
-                  <TextField
-                    fullWidth
-                    required
-                    label='Judul'
-                    type='text'
-                    variant='outlined'
-                    onChange={e => setFormData({ ...formData, judul: e.target.value })}
-                    inputRef={inputRef}
-                    value={formData.judul}
-                  />
-                </Box>
-                {/* Form Input */}
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
-                      fullWidth
-                      label='Nomor'
-                      variant='outlined'
-                      onChange={e => setFormData({ ...formData, nomor: e.target.value })}
-                      value={formData.nomor}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
-                      fullWidth
-                      label='Tanggal'
-                      type='date'
-                      variant='outlined'
-                      onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
-                      value={formData.tanggal}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
-                      fullWidth
-                      label='Periode Audit'
-                      type='year'
-                      variant='outlined'
-                      onChange={e => setFormData({ ...formData, periode: e.target.value })}
-                      value={formData.periode}
-                    />
-                  </Grid>
-                </Grid>
-
-                {/* Deskripsi */}
-                <Typography variant='body2' sx={{ mt: 2 }}>
-                  Deskripsi
-                </Typography>
-                <Box>
-                  <QuillEditor
-                    value={formData.deskripsi}
-                    onChange={content => {
-                      setFormData(prev => ({ ...prev, deskripsi: content }))
-                    }}
-                  />
-                </Box>
-
-                {/* Tombol Submit */}
-                {isEdit ? (
+      {user?.permissions?.includes('create lha', 'update lha') && (
+        <Grid container spacing={2}>
+          <Grid size={12}>
+            <Card>
+              <CardHeader title='Form LHA' />
+              <CardContent>
+                <Stack spacing={2}>
                   <Box>
+                    <TextField
+                      fullWidth
+                      required
+                      label='Judul'
+                      type='text'
+                      variant='outlined'
+                      onChange={e => setFormData({ ...formData, judul: e.target.value })}
+                      inputRef={inputRef}
+                      value={formData.judul}
+                    />
+                  </Box>
+                  {/* Form Input */}
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        fullWidth
+                        label='Nomor'
+                        variant='outlined'
+                        onChange={e => setFormData({ ...formData, nomor: e.target.value })}
+                        value={formData.nomor}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        fullWidth
+                        label='Tanggal'
+                        type='date'
+                        variant='outlined'
+                        onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
+                        value={formData.tanggal}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        fullWidth
+                        label='Periode Audit'
+                        type='year'
+                        variant='outlined'
+                        onChange={e => setFormData({ ...formData, periode: e.target.value })}
+                        value={formData.periode}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Deskripsi */}
+                  <Typography variant='body2' sx={{ mt: 2 }}>
+                    Deskripsi
+                  </Typography>
+                  <Box>
+                    <QuillEditor
+                      value={formData.deskripsi}
+                      onChange={content => {
+                        setFormData(prev => ({ ...prev, deskripsi: content }))
+                      }}
+                    />
+                  </Box>
+
+                  {/* Tombol Submit */}
+                  {isEdit && user?.permissions?.includes('update lha') ? (
+                    <Box>
+                      <Button
+                        type='submit'
+                        variant='contained'
+                        color='primary'
+                        fullWidth
+                        sx={{ mt: 3 }}
+                        onClick={handleUpdate}
+                      >
+                        Ubah
+                      </Button>
+                      <Button
+                        variant='contained'
+                        color='secondary'
+                        fullWidth
+                        sx={{ mt: 3 }}
+                        onClick={() => {
+                          setFormData({
+                            id: '',
+                            judul: '',
+                            nomor: '',
+                            tanggal: new Date().toISOString().split('T')[0],
+                            periode: '',
+                            deskripsi: ''
+                          })
+                          setIsEdit(false)
+                        }}
+                      >
+                        Batal
+                      </Button>
+                    </Box>
+                  ) : (
                     <Button
                       type='submit'
                       variant='contained'
                       color='primary'
                       fullWidth
                       sx={{ mt: 3 }}
-                      onClick={handleUpdate}
+                      onClick={handleSubmit}
                     >
-                      Ubah
+                      Simpan
                     </Button>
-                    <Button
-                      variant='contained'
-                      color='secondary'
-                      fullWidth
-                      sx={{ mt: 3 }}
-                      onClick={() => {
-                        setFormData({
-                          id: '',
-                          judul: '',
-                          nomor: '',
-                          tanggal: new Date().toISOString().split('T')[0],
-                          periode: '',
-                          deskripsi: ''
-                        })
-                        setIsEdit(false)
-                      }}
-                    >
-                      Batal
-                    </Button>
-                  </Box>
-                ) : (
-                  <Button
-                    type='submit'
-                    variant='contained'
-                    color='primary'
-                    fullWidth
-                    sx={{ mt: 3 }}
-                    onClick={handleSubmit}
-                  >
-                    Simpan
-                  </Button>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
-      {/* )} */}
+      )}
       {/* Table */}
       <Grid container spacing={2} sx={{ mt: 5 }}>
         <Grid size={12}>

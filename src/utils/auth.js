@@ -77,13 +77,20 @@ export const logout = async () => {
   }
 }
 
+export const redirectToLogin = () => {
+  Cookies.remove('token')
+  Cookies.remove('expires_iv')
+  Cookies.remove('refresh_token')
+  window.location.href = '/login'
+}
+
 export const refreshToken = async () => {
   try {
     const refreshToken = Cookies.get('refresh_token')
 
     if (!refreshToken) return false // Kalau tidak ada refresh_token, langsung return false
 
-    const res = await fetch(`${API_URL}/v1/refresh-token`, {
+    const res = await fetch(`${url}v1/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken })
@@ -97,6 +104,8 @@ export const refreshToken = async () => {
 
       return true
     } else {
+      redirectToLogin()
+
       return false
     }
   } catch (error) {
