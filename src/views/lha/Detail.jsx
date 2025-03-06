@@ -141,7 +141,8 @@ export default function DetailLha() {
           status_name: data.status_name ?? '-',
           temuan: data.temuan,
           last_stage: data.last_stage,
-          stage: data.stage
+          stage: data.stage,
+          status: data.status
         })
       } else {
         router.replace('/not-found')
@@ -209,7 +210,8 @@ export default function DetailLha() {
               status_name: data.status_name ?? '-',
               temuan: data.temuan,
               last_stage: data.last_stage,
-              stage: data.stage
+              stage: data.stage,
+              status: data.status
             })
           } else {
             router.replace('/not-found')
@@ -266,7 +268,8 @@ export default function DetailLha() {
               status_name: data.status_name ?? '-',
               temuan: data.temuan,
               last_stage: data.last_stage,
-              stage: data.stage
+              stage: data.stage,
+              status: data.status
             })
           } else {
             router.replace('/not-found')
@@ -303,7 +306,7 @@ export default function DetailLha() {
             )}
             {user?.permissions?.includes('update status_lha') &&
               dataLha?.last_stage == roleId &&
-              dataLha?.status !== '0' && (
+              dataLha?.status != 0 && (
                 <Button variant='contained' color='error' onClick={() => setOpenDialogTolak(true)}>
                   Tolak
                 </Button>
