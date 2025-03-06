@@ -53,7 +53,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
 import Swal from 'sweetalert2'
 
-import { detailsLha, findLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
+import { detailsLha, findLha, rejectLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
 import QuillEditor from '@/components/QuillEditor'
 
@@ -96,6 +96,7 @@ export default function DetailLha() {
   const router = useRouter()
   const theme = useTheme()
   const [openDialog, setOpenDialog] = useState(false)
+  const [openDialogTolak, setOpenDialogTolak] = useState(false)
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [loading, setLoading] = useState(false)
 
@@ -206,7 +207,66 @@ export default function DetailLha() {
               deskripsi: data.deskripsi ?? '-',
               stage_name: data.stage_name ?? '-',
               status_name: data.status_name ?? '-',
-              temuan: data.temuan
+              temuan: data.temuan,
+              last_stage: data.last_stage,
+              stage: data.stage
+            })
+          } else {
+            router.replace('/not-found')
+          }
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTolak = async () => {
+    const sendLha = {
+      lha_id: dataLha.id,
+      last_stage: dataLha.last_stage,
+      keterangan: formData.keterangan
+    }
+
+    setLoading(true)
+
+    try {
+      let res = await rejectLha(sendLha)
+
+      if (res.status) {
+        setOpenDialogTolak(false)
+
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1000,
+          backdrop: false
+        })
+
+        detailsLha(dataLha.id).then(res => {
+          if (res.status) {
+            const data = res.data
+
+            setDataLha({
+              id: data.id,
+              judul: data.judul ?? '-',
+              nomor: data.no_lha ?? '-',
+              tanggal: data.tanggal ?? new Date().toISOString().split('T')[0],
+              periode: data.periode ?? '-',
+              deskripsi: data.deskripsi ?? '-',
+              stage_name: data.stage_name ?? '-',
+              status_name: data.status_name ?? '-',
+              temuan: data.temuan,
+              last_stage: data.last_stage,
+              stage: data.stage
             })
           } else {
             router.replace('/not-found')
@@ -235,11 +295,20 @@ export default function DetailLha() {
       <Grid container spacing={2} sx={{ mt: 5, mb: 5 }}>
         <Grid size={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='h6'>Detail LHA</Typography>
-          {user?.permissions?.includes('update status_lha') && dataLha?.last_stage == roleId && (
-            <Button variant='contained' color='primary' onClick={() => setOpenDialog(true)}>
-              Teruskan
-            </Button>
-          )}
+          <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+            {user?.permissions?.includes('update status_lha') && dataLha?.last_stage == roleId && (
+              <Button variant='contained' color='primary' onClick={() => setOpenDialog(true)}>
+                Teruskan
+              </Button>
+            )}
+            {user?.permissions?.includes('update status_lha') &&
+              dataLha?.last_stage == roleId &&
+              dataLha?.status !== '0' && (
+                <Button variant='contained' color='error' onClick={() => setOpenDialogTolak(true)}>
+                  Tolak
+                </Button>
+              )}
+          </Box>
         </Grid>
         <Grid size={12}>
           <Table>
@@ -380,6 +449,45 @@ export default function DetailLha() {
               variant='contained'
               color='primary'
               onClick={handleTeruskan}
+              disabled={loading}
+              loading={loading}
+            >
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          fullScreen={fullScreen}
+          aria-labelledby='responsive-dialog-title'
+          open={openDialogTolak}
+          onClose={() => setOpenDialogTolak(false)}
+          aria-describedby='dialog-description'
+        >
+          <DialogTitle>Konfirmasi</DialogTitle>
+          <DialogContent>
+            <Typography variant='h6' sx={{ mt: 2 }}>
+              And Yakin ingin menolak LHA ini?
+            </Typography>
+            <Typography variant='body2' sx={{ mt: 2 }}>
+              Keterangan
+            </Typography>
+            <Box>
+              <QuillEditor
+                value={formData.keterangan}
+                onChange={content => setFormData(prev => ({ ...prev, keterangan: content }))}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button variant='contained' color='secondary' onClick={() => setOpenDialogTolak(false)}>
+              Close
+            </Button>
+            <Button
+              type='submit'
+              variant='contained'
+              color='primary'
+              onClick={handleTolak}
               disabled={loading}
               loading={loading}
             >
