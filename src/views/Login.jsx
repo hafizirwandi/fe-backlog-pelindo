@@ -12,10 +12,7 @@ import { styled, useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
-import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Divider from '@mui/material/Divider'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -110,15 +107,17 @@ const LoginV2 = ({ mode }) => {
     const user = await login(nip, password)
 
     if (user.status) {
-      Swal.fire({
-        title: 'Login Berhasil!',
-        text: user.message,
-        icon: 'success',
-        timer: 2000, // Otomatis hilang setelah 2 detik
-        showConfirmButton: false
-      }).then(() => {
-        router.push('/home')
-      })
+      // Swal.fire({
+      //   title: 'Login Berhasil!',
+      //   text: user.message,
+      //   icon: 'success',
+      //   timer: 2000, // Otomatis hilang setelah 2 detik
+      //   showConfirmButton: false
+      // }).then(() => {
+      Swal.close()
+      router.push('/home')
+
+      // })
     } else {
       Swal.fire({
         title: 'Login Gagal',

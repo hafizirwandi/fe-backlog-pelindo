@@ -26,7 +26,7 @@ export default function UnitSelect({ value, onSelect }) {
 
         setOptions(uniqueOptions)
       } else {
-        setOptions([]) // Kosongkan jika tidak ada data
+        setOptions([])
       }
     } catch (error) {
       console.error('Error fetching unit:', error)
@@ -37,27 +37,28 @@ export default function UnitSelect({ value, onSelect }) {
 
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (open && inputValue) {
+      if (options.length === 0) {
         fetchData(inputValue)
       }
-    }, 500) // Debounce 500ms
+    }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [open, inputValue])
+  }, [inputValue, options])
 
-  React.useEffect(() => {
-    setSelectedValue(null)
+  // React.useEffect(() => {
+  //   setSelectedValue(null)
 
-    const loadData = async () => {
-      if (!value) return
-      await fetchData('')
-    }
+  //   const loadData = async () => {
+  //     if (!value) return
+  //     await fetchData('')
+  //   }
 
-    loadData()
-  }, [value])
+  //   loadData()
+  // }, [value])
 
   React.useEffect(() => {
     if (!value || options.length === 0) return
+
     const foundOption = options.find(option => option.id === value) || null
 
     setSelectedValue(foundOption)
@@ -69,7 +70,6 @@ export default function UnitSelect({ value, onSelect }) {
       value={selectedValue}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
-      onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
       isOptionEqualToValue={(option, value) => option.nama === value.nama}
       getOptionLabel={option => `${option.nama}`}
       options={options}

@@ -19,12 +19,20 @@ import {
   useMediaQuery,
   Pagination,
   PaginationItem,
-  Tooltip
+  Tooltip,
+  Dialog,
+  useTheme,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  CardActions,
+  MenuItem
 } from '@mui/material'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import Grid from '@mui/material/Grid2'
 import { DataGrid, gridPageCountSelector, GridPagination, useGridApiContext, useGridSelector } from '@mui/x-data-grid'
-import { Delete, Edit, ListAlt, PlaylistAdd } from '@mui/icons-material'
+import { Add, Delete, Edit, ListAlt, PlaylistAdd, PlusOne, Send } from '@mui/icons-material'
 
 import { useDebouncedCallback } from '@coreui/react-pro'
 
@@ -32,6 +40,7 @@ import Swal from 'sweetalert2'
 
 import { createLha, dataLha, deleteLha, findLha, updateLha } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
+import CustomTextField from '@/@core/components/mui/TextField'
 
 const QuillEditor = dynamic(() => import('@components/QuillEditor'), {
   ssr: false
@@ -72,6 +81,9 @@ const CustomToolbar = ({ searchQuery, setSearchQuery }) => {
 
 export default function Lha() {
   const { user, loadingUser } = useAuth()
+  const [openDialog, setOpenDialog] = useState(false)
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
 
   const router = useRouter()
 
@@ -93,6 +105,7 @@ export default function Lha() {
   const [rows, setRows] = useState([])
   const [totalRows, setTotalRows] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterTable, setFilterTable] = useState([])
 
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -138,7 +151,7 @@ export default function Lha() {
   }, [fetchData])
 
   const handleClick = id => {
-    window.location.href = `/temuan?lha=${id}`
+    router.push(`/temuan?lha=${id}`)
   }
 
   const columns = [
@@ -168,7 +181,7 @@ export default function Lha() {
     },
     {
       field: 'last_stage',
-      headerName: 'State/Posisi LHA',
+      headerName: 'Stage/Posisi LHA',
       flex: 1,
       renderCell: params => (
         <>
@@ -284,6 +297,8 @@ export default function Lha() {
           deskripsi: data.deskripsi ?? '-'
         })
 
+        setOpenDialog(true)
+
         setIsEdit(true)
 
         setTimeout(() => inputRef.current?.focus(), 50)
@@ -306,6 +321,7 @@ export default function Lha() {
       const res = await createLha(dataRequest)
 
       if (res.status) {
+        setOpenDialog(false)
         await Swal.fire({
           title: 'Berhasil!',
           text: res.message,
@@ -363,6 +379,7 @@ export default function Lha() {
       const res = await updateLha(formData.id, dataRequest)
 
       if (res.status) {
+        setOpenDialog(false)
         await Swal.fire({
           title: 'Berhasil!',
           text: res.message,
@@ -470,126 +487,247 @@ export default function Lha() {
     router.push(`/lha/${id}/detail`)
   }
 
+  const handleFilter = async () => {
+    setLoading(true)
+    const response = await dataLha(paginationModel.page + 1, paginationModel.pageSize, searchQuery, filterTable)
+
+    if (response.status) {
+      setRows(
+        response.data.map((item, index) => ({
+          no: index + 1 + paginationModel.page * paginationModel.pageSize,
+          ...item
+        }))
+      )
+      setTotalRows(response.pagination.total)
+    }
+
+    setLoading(false)
+  }
+
   return (
     <>
       <Typography variant='h4' gutterBottom>
         LHA (Laporan Hasil Audit)
       </Typography>
-      {user?.permissions?.includes('create lha', 'update lha') && (
-        <Grid container spacing={2}>
-          <Grid size={12}>
-            <Card>
-              <CardHeader title='Form LHA' />
-              <CardContent>
-                <Stack spacing={2}>
-                  <Box>
-                    <TextField
-                      fullWidth
-                      required
-                      label='Judul'
-                      type='text'
-                      variant='outlined'
-                      onChange={e => setFormData({ ...formData, judul: e.target.value })}
-                      inputRef={inputRef}
-                      value={formData.judul}
-                    />
-                  </Box>
-                  {/* Form Input */}
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <TextField
-                        fullWidth
-                        label='Nomor'
-                        variant='outlined'
-                        onChange={e => setFormData({ ...formData, nomor: e.target.value })}
-                        value={formData.nomor}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <TextField
-                        fullWidth
-                        label='Tanggal'
-                        type='date'
-                        variant='outlined'
-                        onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
-                        value={formData.tanggal}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <TextField
-                        fullWidth
-                        label='Periode Audit'
-                        type='year'
-                        variant='outlined'
-                        onChange={e => setFormData({ ...formData, periode: e.target.value })}
-                        value={formData.periode}
-                      />
-                    </Grid>
-                  </Grid>
-
-                  {/* Deskripsi */}
-                  <Typography variant='body2' sx={{ mt: 2 }}>
-                    Deskripsi
-                  </Typography>
-                  <Box>
-                    <QuillEditor
-                      value={formData.deskripsi}
-                      onChange={content => {
-                        setFormData(prev => ({ ...prev, deskripsi: content }))
-                      }}
-                    />
-                  </Box>
-
-                  {/* Tombol Submit */}
-                  {isEdit && user?.permissions?.includes('update lha') ? (
-                    <Box>
-                      <Button
-                        type='submit'
-                        variant='contained'
-                        color='primary'
-                        fullWidth
-                        sx={{ mt: 3 }}
-                        onClick={handleUpdate}
-                      >
-                        Ubah
-                      </Button>
-                      <Button
-                        variant='contained'
-                        color='secondary'
-                        fullWidth
-                        sx={{ mt: 3 }}
-                        onClick={() => {
-                          setFormData({
-                            id: '',
-                            judul: '',
-                            nomor: '',
-                            tanggal: new Date().toISOString().split('T')[0],
-                            periode: '',
-                            deskripsi: ''
-                          })
-                          setIsEdit(false)
-                        }}
-                      >
-                        Batal
-                      </Button>
-                    </Box>
-                  ) : (
-                    <Button
-                      type='submit'
-                      variant='contained'
-                      color='primary'
-                      fullWidth
-                      sx={{ mt: 3 }}
-                      onClick={handleSubmit}
-                    >
-                      Simpan
-                    </Button>
-                  )}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
+      <Grid container spacing={2} sx={{ mt: 5 }}>
+        <Grid size={{ sm: 12, md: 4 }}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant='h6'>Tambah LHA</Typography>
+              <Typography variant='body2' color='textSecondary'>
+                Inputkan hasil audit baru untuk merekam proses dan temuan dari audit yang telah dilakukan.
+              </Typography>
+              <Button variant='contained' startIcon={<Add />} sx={{ mt: 2 }} onClick={() => setOpenDialog(true)}>
+                Tambah
+              </Button>
+            </CardContent>
+          </Card>
         </Grid>
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Card sx={{ width: '100%' }}>
+            <CardContent>
+              <Typography variant='h6'>Filter Data LHA</Typography>
+              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                <CustomTextField
+                  select
+                  fullWidth
+                  defaultValue=''
+                  label='Posisi LHA'
+                  slotProps={{
+                    select: {
+                      displayEmpty: true,
+                      multiple: false
+                    }
+                  }}
+                  onChange={e => setFilterTable({ ...filterTable, last_stage: e.target.value })}
+                >
+                  <MenuItem value=''>
+                    <em>Pilih Status</em>
+                  </MenuItem>
+                  <MenuItem value={1}>Admin</MenuItem>
+                  <MenuItem value={2}>Supervisor</MenuItem>
+                  <MenuItem value={3}>PIC</MenuItem>
+                  <MenuItem value={4}>Penanggung Jawab</MenuItem>
+                  <MenuItem value={5}>Auditor</MenuItem>
+                  <MenuItem value={6}>Selesai</MenuItem>
+                </CustomTextField>
+                <CustomTextField
+                  select
+                  fullWidth
+                  defaultValue=''
+                  label='Status'
+                  slotProps={{
+                    select: {
+                      displayEmpty: true,
+                      multiple: false
+                    }
+                  }}
+                  onChange={e => setFilterTable({ ...filterTable, status: e.target.value })}
+                >
+                  <MenuItem value=''>
+                    <em>Pilih Status</em>
+                  </MenuItem>
+                  <MenuItem value={0}>Draf</MenuItem>
+                  <MenuItem value={1}>Proses</MenuItem>
+                  <MenuItem value={3}>Selesai</MenuItem>
+                  <MenuItem value={2}>Ditolak</MenuItem>
+                </CustomTextField>
+              </Box>
+              <Button variant='contained' sx={{ mt: 2 }} fullWidth onClick={handleFilter}>
+                Terapkan Filter
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+      {user?.permissions?.includes('create lha', 'update lha') && (
+        <Dialog
+          fullScreen={fullScreen}
+          aria-labelledby='responsive-dialog-title'
+          open={openDialog}
+          onClose={() => {
+            setFormData({
+              id: '',
+              judul: '',
+              nomor: '',
+              tanggal: new Date().toISOString().split('T')[0],
+              periode: '',
+              deskripsi: ''
+            })
+            setIsEdit(false)
+            setOpenDialog(false)
+          }}
+          aria-describedby='dialog-description'
+        >
+          <DialogTitle>Form Laporan Hasil Audit</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2}>
+              <Box>
+                <TextField
+                  fullWidth
+                  required
+                  label='Judul'
+                  type='text'
+                  variant='outlined'
+                  onChange={e => setFormData({ ...formData, judul: e.target.value })}
+                  inputRef={inputRef}
+                  value={formData.judul}
+                />
+              </Box>
+              {/* Form Input */}
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    fullWidth
+                    label='Nomor'
+                    variant='outlined'
+                    onChange={e => setFormData({ ...formData, nomor: e.target.value })}
+                    value={formData.nomor}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    fullWidth
+                    label='Tanggal'
+                    type='date'
+                    variant='outlined'
+                    onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
+                    value={formData.tanggal}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    fullWidth
+                    label='Periode Audit'
+                    type='year'
+                    variant='outlined'
+                    onChange={e => setFormData({ ...formData, periode: e.target.value })}
+                    value={formData.periode}
+                  />
+                </Grid>
+              </Grid>
+              <CustomTextField
+                fullWidth
+                rows={4}
+                multiline
+                label='Deskripsi'
+                placeholder='Masukkan deskripsi...'
+                onChange={e => setFormData({ ...formData, deskripsi: e.target.value })}
+                value={formData.deskripsi}
+                sx={{ '& .MuiInputBase-root.MuiFilledInput-root': { alignItems: 'baseline' } }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <i className='tabler-message' />
+                      </InputAdornment>
+                    )
+                  }
+                }}
+              />
+              {/* Deskripsi
+              <Typography variant='body2' sx={{ mt: 2 }}>
+                Deskripsi
+              </Typography>
+              <Box>
+                <QuillEditor
+                  value={formData.deskripsi}
+                  onChange={content => {
+                    setFormData(prev => ({ ...prev, deskripsi: content }))
+                  }}
+                />
+              </Box> */}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant='contained'
+              color='secondary'
+              sx={{ mt: 3 }}
+              onClick={() => {
+                setFormData({
+                  id: '',
+                  judul: '',
+                  nomor: '',
+                  tanggal: new Date().toISOString().split('T')[0],
+                  periode: '',
+                  deskripsi: ''
+                })
+                setIsEdit(false)
+                setOpenDialog(false)
+              }}
+            >
+              Batal
+            </Button>
+            {isEdit && user?.permissions?.includes('update lha') ? (
+              <Box>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  color='primary'
+                  sx={{ mt: 3 }}
+                  loading={loading}
+                  onClick={handleUpdate}
+                >
+                  Ubah
+                </Button>
+              </Box>
+            ) : (
+              <Box>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  loading={loading}
+                  color='primary'
+                  sx={{ mt: 3 }}
+                  onClick={handleSubmit}
+                >
+                  Simpan
+                </Button>
+              </Box>
+            )}
+          </DialogActions>
+        </Dialog>
       )}
       {/* Table */}
       <Grid container spacing={2} sx={{ mt: 5 }}>

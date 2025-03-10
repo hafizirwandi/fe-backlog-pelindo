@@ -9,18 +9,10 @@ import {
   DialogContent,
   DialogActions,
   Box,
-  Container,
   Typography,
-  TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   CardContent,
   Card,
-  Stack,
-  CardHeader,
   Table,
   TableHead,
   TableRow,
@@ -28,22 +20,18 @@ import {
   TableBody,
   Chip,
   IconButton,
-  Tooltip,
-  Breadcrumbs,
-  Link,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  AccordionActions,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
   Collapse,
-  Paper,
   TableContainer,
   useMediaQuery,
-  useTheme
+  useTheme,
+  CardActions,
+  InputAdornment,
+  CardHeader,
+  Paper
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Grid from '@mui/material/Grid2'
@@ -53,9 +41,12 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
 import Swal from 'sweetalert2'
 
+import { Check, Send } from '@mui/icons-material'
+
 import { detailsLha, findLha, rejectLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
 import QuillEditor from '@/components/QuillEditor'
+import CustomTextField from '@/@core/components/mui/TextField'
 
 function Row({ row }) {
   const [open, setOpen] = useState(false)
@@ -291,122 +282,130 @@ export default function DetailLha() {
 
   return (
     <>
-      <Typography variant='h4' gutterBottom>
-        Detail LHA (Laporan Hasil Audit)
-      </Typography>
-
       <Grid container spacing={2} sx={{ mt: 5, mb: 5 }}>
-        <Grid size={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant='h6'>Detail LHA</Typography>
-          <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
-            {user?.permissions?.includes('update status_lha') && dataLha?.last_stage == roleId && (
-              <Button variant='contained' color='primary' onClick={() => setOpenDialog(true)}>
-                Teruskan
-              </Button>
-            )}
-            {user?.permissions?.includes('update status_lha') &&
-              dataLha?.last_stage == roleId &&
-              dataLha?.status != 0 && (
-                <Button variant='contained' color='error' onClick={() => setOpenDialogTolak(true)}>
-                  Tolak
-                </Button>
-              )}
-          </Box>
-        </Grid>
         <Grid size={12}>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ width: 200 }}>No. LHA</TableCell>
-                <TableCell sx={{ width: 10 }}>:</TableCell>
-                <TableCell>{dataLha.nomor}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Judul</TableCell>
-                <TableCell>:</TableCell>
-                <TableCell>{dataLha.judul}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Tanggal</TableCell>
-                <TableCell>:</TableCell>
-                <TableCell>{dataLha.tanggal}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Periode</TableCell>
-                <TableCell>:</TableCell>
-                <TableCell>{dataLha.periode}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Stage Terakhir</TableCell>
-                <TableCell>:</TableCell>
-                <TableCell>
-                  <Chip label={dataLha.stage_name} variant='outlined' color='primary' size='small' />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Status</TableCell>
-                <TableCell>:</TableCell>
-                <TableCell>
-                  <Chip label={dataLha.status_name} variant='outlined' color='success' size='small' />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Deskripsi</TableCell>
-                <TableCell>:</TableCell>
-                <TableCell>
-                  <Box dangerouslySetInnerHTML={{ __html: dataLha.deskripsi }} />
-                </TableCell>
-              </TableRow>
-              {dataLha?.stage?.keterangan && (
-                <TableRow>
-                  <TableCell>Keterangan</TableCell>
-                  <TableCell>:</TableCell>
-                  <TableCell>
-                    <Box dangerouslySetInnerHTML={{ __html: dataLha.stage.keterangan }} />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <Card>
+            <CardActions>
+              <Grid size={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant='h5'>Detail LHA</Typography>
+                <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+                  {user?.permissions?.includes('update status_lha') && dataLha?.last_stage == roleId && (
+                    <Button
+                      variant='contained'
+                      color='primary'
+                      endIcon={dataLha?.status == 0 ? <Send /> : <Check />}
+                      onClick={() => setOpenDialog(true)}
+                    >
+                      {dataLha?.status == 0 ? 'Kirim' : 'Terima'}
+                    </Button>
+                  )}
+                  {user?.permissions?.includes('update status_lha') &&
+                    dataLha?.last_stage == roleId &&
+                    dataLha?.status != 0 && (
+                      <Button variant='contained' color='error' onClick={() => setOpenDialogTolak(true)}>
+                        Tolak
+                      </Button>
+                    )}
+                </Box>
+              </Grid>
+            </CardActions>
+
+            <CardContent>
+              <TableContainer component={Paper} sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
+                <Table size='small'>
+                  <TableBody>
+                    {[
+                      { label: 'No. LHA', value: dataLha.nomor },
+                      { label: 'Judul', value: dataLha.judul },
+                      { label: 'Tanggal', value: dataLha.tanggal },
+                      { label: 'Periode', value: dataLha.periode },
+                      {
+                        label: 'Posisi Sekarang',
+                        value: <Chip label={dataLha.stage_name} variant='outlined' color='primary' size='small' />
+                      },
+                      {
+                        label: 'Status',
+                        value: <Chip label={dataLha.status_name} variant='outlined' color='success' size='small' />
+                      },
+                      {
+                        label: 'Deskripsi',
+                        value: <Box dangerouslySetInnerHTML={{ __html: dataLha.deskripsi }} />
+                      },
+                      dataLha?.stage?.keterangan && {
+                        label: 'Keterangan',
+                        value: <Box dangerouslySetInnerHTML={{ __html: dataLha.stage.keterangan }} />
+                      }
+                    ]
+                      .filter(Boolean)
+                      .map((row, index) => (
+                        <TableRow key={index}>
+                          <TableCell sx={{ fontWeight: 'bold', width: 200 }}>{row.label}</TableCell>
+                          <TableCell sx={{ width: 10, fontWeight: 'bold', color: 'primary.main' }}>:</TableCell>
+                          <TableCell>{row.value}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid size={2}></Grid>
       </Grid>
       {Object.entries(dataLha.temuan).map(([key, item]) => (
-        <Box key={key}>
-          <Divider textAlign='left' sx={{ my: 5 }}>
-            {item.nama_divisi}
-          </Divider>
-          <Grid container spacing={2}>
-            <Grid size={12}>
-              {item.data.map((row, index) => (
-                <Accordion key={index}>
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    aria-controls={`panel-${index}-content`}
-                    id={`panel-${index}-header`}
+        <Card key={key} sx={{ mb: 2 }}>
+          <CardHeader title={item.nama_divisi} />
+
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid size={12}>
+                {item.data.map((row, index) => (
+                  <Accordion
+                    key={index}
+                    sx={{
+                      boxShadow: 'none',
+                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      borderRadius: 2,
+                      overflow: 'hidden'
+                    }}
                   >
-                    <Typography component='span'>{row.judul}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <TableContainer>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell>Rekomendasi</TableCell>
-                            <TableCell>Due Date</TableCell>
-                            <TableCell>Status</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {row.rekomendasi.map((rekomendasi, index) => (
-                            <Row key={index} row={rekomendasi} />
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </AccordionDetails>
-                  {/* <AccordionActions>
+                    <AccordionSummary
+                      sx={{
+                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.05)' },
+                        padding: 0, // Remove extra padding
+                        paddingX: 2
+                      }}
+                      aria-controls={`panel-content-${index}`}
+                      id={`panel-header-${index}`}
+                    >
+                      <Typography component='span'>{row.judul}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow sx={{ borderBottom: '2px solid rgba(0, 0, 0, 0.1)' }}>
+                              <TableCell></TableCell>
+                              <TableCell>Rekomendasi</TableCell>
+                              <TableCell>Due Date</TableCell>
+                              <TableCell>Status</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {row.rekomendasi && row.rekomendasi.length > 0 ? (
+                              row.rekomendasi.map((rekomendasi, index) => <Row key={index} row={rekomendasi} />)
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={4} align='center'>
+                                  Tidak ada data
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </AccordionDetails>
+                    {/* <AccordionActions>
                     <Button variant='contained' color='warning'>
                       Ubah
                     </Button>
@@ -414,11 +413,12 @@ export default function DetailLha() {
                       Hapus
                     </Button>
                   </AccordionActions> */}
-                </Accordion>
-              ))}
+                  </Accordion>
+                ))}
+              </Grid>
             </Grid>
-          </Grid>
-        </Box>
+          </CardContent>
+        </Card>
       ))}
       <Grid>
         <Dialog
@@ -427,13 +427,34 @@ export default function DetailLha() {
           open={openDialog}
           onClose={() => setOpenDialog(false)}
           aria-describedby='dialog-description'
+          fullWidth={true}
+          maxWidth={'sm'}
         >
           <DialogTitle>Konfirmasi</DialogTitle>
           <DialogContent>
-            <Typography variant='h6' sx={{ mt: 2 }}>
-              And Yakin ingin meneruskan LHA ini?
+            <Typography variant='h6' sx={{ my: 2 }}>
+              And Yakin ingin meneruskan Laporan Hasil Audit ini?
             </Typography>
-            <Typography variant='body2' sx={{ mt: 2 }}>
+            <CustomTextField
+              fullWidth
+              rows={4}
+              multiline
+              label='Keterangan'
+              placeholder='Masukkan keterangan...'
+              onChange={e => setFormData({ ...formData, keterangan: e.target.value })}
+              value={formData.keterangan}
+              sx={{ '& .MuiInputBase-root.MuiFilledInput-root': { alignItems: 'baseline' } }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='tabler-message' />
+                    </InputAdornment>
+                  )
+                }
+              }}
+            />
+            {/* <Typography variant='body2' sx={{ mt: 2 }}>
               Keterangan
             </Typography>
             <Box>
@@ -441,7 +462,7 @@ export default function DetailLha() {
                 value={formData.keterangan}
                 onChange={content => setFormData(prev => ({ ...prev, keterangan: content }))}
               />
-            </Box>
+            </Box> */}
           </DialogContent>
           <DialogActions>
             <Button variant='contained' color='secondary' onClick={() => setOpenDialog(false)}>
@@ -466,13 +487,34 @@ export default function DetailLha() {
           open={openDialogTolak}
           onClose={() => setOpenDialogTolak(false)}
           aria-describedby='dialog-description'
+          fullWidth={true}
+          maxWidth={'sm'}
         >
           <DialogTitle>Konfirmasi</DialogTitle>
           <DialogContent>
-            <Typography variant='h6' sx={{ mt: 2 }}>
+            <Typography variant='h6' sx={{ my: 2 }}>
               And Yakin ingin menolak LHA ini?
             </Typography>
-            <Typography variant='body2' sx={{ mt: 2 }}>
+            <CustomTextField
+              fullWidth
+              rows={4}
+              multiline
+              label='Keterangan'
+              placeholder='Masukkan keterangan...'
+              onChange={e => setFormData({ ...formData, keterangan: e.target.value })}
+              value={formData.keterangan}
+              sx={{ '& .MuiInputBase-root.MuiFilledInput-root': { alignItems: 'baseline' } }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='tabler-message' />
+                    </InputAdornment>
+                  )
+                }
+              }}
+            />
+            {/* <Typography variant='body2' sx={{ mt: 2 }}>
               Keterangan
             </Typography>
             <Box>
@@ -480,7 +522,7 @@ export default function DetailLha() {
                 value={formData.keterangan}
                 onChange={content => setFormData(prev => ({ ...prev, keterangan: content }))}
               />
-            </Box>
+            </Box> */}
           </DialogContent>
           <DialogActions>
             <Button variant='contained' color='secondary' onClick={() => setOpenDialogTolak(false)}>

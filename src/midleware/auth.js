@@ -7,7 +7,7 @@ const url = process.env.NEXT_PUBLIC_API_BASE_URL
 export async function middleware(req) {
   const url = req.nextUrl
   const token = req.cookies.get('token')
-  const refreshToken = req.cookies.get('refresh_token')
+  const refreshTokenCookies = req.cookies.get('refresh_token')
   const expiresIn = req.cookies.get('expires_in')
 
   const publicRoutes = ['/login']
@@ -16,22 +16,32 @@ export async function middleware(req) {
     return NextResponse.next()
   }
 
-  if (!token) {
-    console.log('Redirect ke /login karena tidak ada token')
+  console.log(refreshTokenCookies)
 
-    return NextResponse.redirect(new URL('/login', req.url))
+  // return
+
+  if (!token) {
+    if (!refreshTokenCookies) {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+
+    const getNewToken = await refreshToken()
+
+    if (!getNewToken) {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
   }
 
   const now = new Date()
   const expireTime = new Date(expiresIn)
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000)
 
-  if (expireTime < oneHourLater && refreshToken) {
+  if (expireTime < oneHourLater && refreshTokenCookies) {
     try {
       const res = await fetch(`${url}/v1/refresh-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken })
+        body: JSON.stringify({ refresh_token: refreshTokenCookies })
       })
 
       const data = await res.json()

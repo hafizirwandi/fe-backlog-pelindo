@@ -13,11 +13,11 @@ export default function DivisiSelect({ value, unitId, onSelect }) {
   const [inputValue, setInputValue] = React.useState('')
   const [selectedValue, setSelectedValue] = React.useState(null)
 
-  const fetchData = async (keyword, unitId) => {
+  const fetchData = async unitId => {
     setLoading(true)
 
     try {
-      const response = await dataDivisiByUnit(1, 100, keyword, unitId)
+      const response = await dataDivisiByUnit(1, 100, '', unitId)
 
       if (response.data) {
         const uniqueOptions = response.data.filter(
@@ -34,32 +34,17 @@ export default function DivisiSelect({ value, unitId, onSelect }) {
   }
 
   React.useEffect(() => {
-    if (open && unitId) {
-      fetchData(inputValue, unitId)
-    } else if (unitId) {
-      fetchData(inputValue, unitId)
+    if (unitId) {
+      fetchData(unitId)
     } else {
       setOptions([])
       setSelectedValue(null)
     }
-  }, [open, inputValue, unitId])
-
-  React.useEffect(() => {
-    if (!value && !unitId) {
-      setSelectedValue(null)
-
-      return
-    }
-
-    const loadData = async () => {
-      await fetchData('', unitId)
-    }
-
-    loadData()
-  }, [value, unitId])
+  }, [unitId])
 
   React.useEffect(() => {
     if (!value || options.length === 0) return
+
     const foundOption = options.find(option => option.id === value) || null
 
     setSelectedValue(foundOption)
@@ -71,7 +56,6 @@ export default function DivisiSelect({ value, unitId, onSelect }) {
       value={selectedValue}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
-      onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
       isOptionEqualToValue={(option, value) => option.nama === value.nama}
       getOptionLabel={option => `${option.nama}`}
       options={options}

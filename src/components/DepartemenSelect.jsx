@@ -13,11 +13,11 @@ export default function DepartemenSelect({ value, divisiId, onSelect }) {
   const [inputValue, setInputValue] = React.useState('')
   const [selectedValue, setSelectedValue] = React.useState(null)
 
-  const fetchData = async (keyword, divisiId) => {
+  const fetchData = async divisiId => {
     setLoading(true)
 
     try {
-      const response = await dataDepartemenByDivisi(1, 100, keyword, divisiId)
+      const response = await dataDepartemenByDivisi(1, 100, '', divisiId)
 
       if (response.data) {
         const uniqueOptions = response.data.filter(
@@ -34,25 +34,17 @@ export default function DepartemenSelect({ value, divisiId, onSelect }) {
   }
 
   React.useEffect(() => {
-    if (open && divisiId) {
-      fetchData(inputValue, divisiId)
+    if (divisiId) {
+      fetchData(divisiId)
     } else {
       setOptions([])
       setSelectedValue(null)
     }
-  }, [open, inputValue, divisiId])
-
-  React.useEffect(() => {
-    const loadData = async () => {
-      if (!value && !divisiId) return
-      await fetchData('', divisiId)
-    }
-
-    loadData()
-  }, [value, divisiId])
+  }, [divisiId])
 
   React.useEffect(() => {
     if (!value || options.length === 0) return
+
     const foundOption = options.find(option => option.id === value) || null
 
     setSelectedValue(foundOption)

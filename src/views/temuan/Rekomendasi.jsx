@@ -1,4 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+'use client'
+import React, { useCallback, useEffect, useState } from 'react'
+
+import { useParams, useRouter } from 'next/navigation'
 
 import {
   Card,
@@ -21,19 +24,21 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
-  Chip
+  Chip,
+  Tooltip
 } from '@mui/material'
 import Swal from 'sweetalert2'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs from 'dayjs'
-import { Edit, Delete, Visibility as VisibilityIcon } from '@mui/icons-material'
+import { Edit, Delete, Visibility as VisibilityIcon, PlaylistAdd } from '@mui/icons-material'
 
 import { DataGrid, gridClasses } from '@mui/x-data-grid'
 
 import { findTemuan } from '@/utils/temuan'
-import QuillEditor from '@/components/QuillEditor'
+
+// import QuillEditor from '@/components/QuillEditor'
 import {
   createRekomendasi,
   dataRekomendasi,
@@ -52,7 +57,7 @@ const statusColor = {
   3: 'error'
 }
 
-export default function DetailTemuan({ id }) {
+export default function DetailTemuan() {
   const { user } = useAuth()
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
@@ -64,6 +69,10 @@ export default function DetailTemuan({ id }) {
 
   const [rows, setRows] = useState([])
 
+  const id = useParams()
+
+  const router = useRouter()
+
   const [formData, setFormData] = useState({
     temuan_id: '',
     nomor: '',
@@ -73,8 +82,12 @@ export default function DetailTemuan({ id }) {
     status: 0
   })
 
-  const fetchDetailData = useCallback(async idTemuan => {
+  const fetchDetailData = useCallback(async () => {
+    if (!id) return
+
     try {
+      const idTemuan = id.id
+
       setLoading(true)
       const response = await findTemuan(idTemuan)
 
@@ -97,9 +110,12 @@ export default function DetailTemuan({ id }) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [id])
 
-  const fetchRekomendasiData = async idTemuan => {
+  const fetchRekomendasiData = async id => {
+    if (!id) return
+    const idTemuan = id.id
+
     try {
       const response = await dataRekomendasi(idTemuan)
 
@@ -125,13 +141,19 @@ export default function DetailTemuan({ id }) {
   }
 
   useEffect(() => {
-    fetchDetailData(id)
+    fetchDetailData()
     fetchRekomendasiData(id).then(data => setRows(data))
-    setFormData(prev => ({ ...prev, temuan_id: id }))
-  }, [id, fetchDetailData])
+    setFormData(prev => ({ ...prev, temuan_id: id.id }))
+  }, [fetchDetailData, id])
 
   if (!detailData) {
     return null
+  }
+
+  const handleUrlTindaklanjut = idRekomendasi => {
+    const idTemuan = id.id
+
+    router.push(`rekomendasi/${idRekomendasi}/tindak-lanjut`)
   }
 
   const columns = [
@@ -185,15 +207,29 @@ export default function DetailTemuan({ id }) {
       renderCell: params => (
         <>
           {user?.permissions?.includes('update rekomendasi') && detailData.status === '0' && (
+            <Tooltip title='Ubah Rekomendasi' arrow>
+              <IconButton
+                size='small'
+                color='warning'
+                onClick={() => handleEdit(params.row.id)}
+                sx={{ width: 24, height: 24 }}
+              >
+                <Edit fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          )}
+          {/* {user?.permissions?.includes('read tindaklanjut') && ( */}
+          <Tooltip title='Tindak Lanjut' arrow>
             <IconButton
               size='small'
-              color='warning'
-              onClick={() => handleEdit(params.row.id)}
+              color='primary'
               sx={{ width: 24, height: 24 }}
+              onClick={() => handleUrlTindaklanjut(params.row.id)}
             >
-              <Edit fontSize='small' />
+              <PlaylistAdd fontSize='small' />
             </IconButton>
-          )}
+          </Tooltip>
+          {/* )} */}
           {user?.permissions?.includes('delete rekomendasi') && detailData.status === '0' && (
             <IconButton
               size='small'
@@ -342,162 +378,164 @@ export default function DetailTemuan({ id }) {
   }
 
   return (
-    <Card>
-      <CardHeader
-        title='Detail Temuan'
-        action={
-          <Button variant='contained' color='primary' href={`/lha/${detailData.lha_id}/detail`}>
-            Lihat Detail LHA
-          </Button>
-        }
-      />
-      <CardContent>
-        <Grid2 container spacing={5}>
-          <Grid2 size={{ xs: 12, md: 5 }}>
-            <Typography variant='h6' gutterBottom>
-              LHA
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.lha}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Nomor
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.nomor}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Judul
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.judul}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Deskripsi
-            </Typography>
-            <Box sx={{ mt: 1 }}>
-              <Box dangerouslySetInnerHTML={{ __html: detailData.deskripsi ?? '-' }} />
-            </Box>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Unit
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.unit}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Divisi
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.divisi}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Departemen
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.departemen}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant='h6' gutterBottom>
-              Status
-            </Typography>
-            <Typography variant='body1' gutterBottom>
-              {detailData.status_name}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 7 }}>
-            <Box sx={{ height: 'auto', minHeight: 400 }}>
+    <>
+      <Card>
+        <CardHeader
+          title='Detail Temuan'
+          action={
+            <Button variant='contained' color='primary' href={`/lha/${detailData.lha_id}/detail`}>
+              Lihat Detail LHA
+            </Button>
+          }
+        />
+        <CardContent>
+          <Grid2 container spacing={5}>
+            {' '}
+            <Grid2 size={{ xs: 12, md: 5 }}>
               <Typography variant='h6' gutterBottom>
-                Rekomendasi
+                LHA
               </Typography>
-              {user?.permissions?.includes('create rekomendasi') && detailData.status === '0' && (
-                <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
-                  Tambah Rekomendasi
-                </Button>
-              )}
-              <Box sx={{ mt: 2 }}>
-                <Divider sx={{ my: 2 }} />
+              <Typography variant='body1' gutterBottom>
+                {detailData.lha}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Nomor
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {detailData.nomor}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Judul
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {detailData.judul}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Deskripsi
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Box dangerouslySetInnerHTML={{ __html: detailData.deskripsi ?? '-' }} />
               </Box>
-              <DataGrid
-                loading={loading}
-                columnVisibilityModel={{ id: false }}
-                rows={rows}
-                columns={columns}
-                pageSize={5}
-                rowsPerPageOptions={[5]}
-                getRowHeight={() => 'auto'}
-                sx={{
-                  [`& .${gridClasses.cell}`]: {
-                    py: 3
-                  }
-                }}
-              />
-            </Box>
-          </Grid2>
-          {user?.permissions?.includes('create rekomendasi') && (
-            <Grid2 size={{ xs: 12 }}>
-              <Dialog
-                fullScreen={fullScreen}
-                aria-labelledby='responsive-dialog-title'
-                open={isEdit}
-                onClose={() => setIsEdit(false)}
-                aria-describedby='dialog-description'
-              >
-                <DialogTitle>Form Rekomendasi</DialogTitle>
-                <DialogContent>
-                  <TextField
-                    fullWidth
-                    label='Nomor'
-                    variant='outlined'
-                    margin='normal'
-                    value={formData.nomor}
-                    onChange={e => setFormData({ ...formData, nomor: e.target.value })}
-                  />
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        mt: 2,
-                        flexDirection: { xs: 'column', sm: 'row' }
-                      }}
-                    >
-                      <DatePicker
-                        label='Batas Tanggal'
-                        value={formData.batas_tanggal ? dayjs(formData.batas_tanggal) : null}
-                        format='DD/MM/YYYY'
-                        onChange={newValue =>
-                          setFormData({
-                            ...formData,
-                            batas_tanggal: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-                          })
-                        }
-                        slotProps={{ textField: { fullWidth: true } }} // Agar input full width
-                        sx={{ width: '100%' }}
-                      />
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Unit
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {detailData.unit}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Divisi
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {detailData.divisi}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Departemen
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {detailData.departemen}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Status
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {detailData.status_name}
+              </Typography>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 7 }}>
+              <Box sx={{ height: 'auto', minHeight: 400 }}>
+                <Typography variant='h6' gutterBottom>
+                  Rekomendasi
+                </Typography>
+                {user?.permissions?.includes('create rekomendasi') && detailData.status === '0' && (
+                  <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
+                    Tambah Rekomendasi
+                  </Button>
+                )}
+                <Box sx={{ mt: 2 }}>
+                  <Divider sx={{ my: 2 }} />
+                </Box>
+                <DataGrid
+                  loading={loading}
+                  columnVisibilityModel={{ id: false }}
+                  rows={rows}
+                  columns={columns}
+                  pageSize={5}
+                  rowsPerPageOptions={[5]}
+                  getRowHeight={() => 'auto'}
+                  sx={{
+                    [`& .${gridClasses.cell}`]: {
+                      py: 3
+                    }
+                  }}
+                />
+              </Box>
+            </Grid2>
+            {user?.permissions?.includes('create rekomendasi') && (
+              <Grid2 size={{ xs: 12 }}>
+                <Dialog
+                  fullScreen={fullScreen}
+                  aria-labelledby='responsive-dialog-title'
+                  open={isEdit}
+                  onClose={() => setIsEdit(false)}
+                  aria-describedby='dialog-description'
+                >
+                  <DialogTitle>Form Rekomendasi</DialogTitle>
+                  <DialogContent>
+                    <TextField
+                      fullWidth
+                      label='Nomor'
+                      variant='outlined'
+                      margin='normal'
+                      value={formData.nomor}
+                      onChange={e => setFormData({ ...formData, nomor: e.target.value })}
+                    />
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          mt: 2,
+                          flexDirection: { xs: 'column', sm: 'row' }
+                        }}
+                      >
+                        <DatePicker
+                          label='Batas Tanggal'
+                          value={formData.batas_tanggal ? dayjs(formData.batas_tanggal) : null}
+                          format='DD/MM/YYYY'
+                          onChange={newValue =>
+                            setFormData({
+                              ...formData,
+                              batas_tanggal: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                            })
+                          }
+                          slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                          sx={{ width: '100%' }}
+                        />
 
-                      <DatePicker
-                        label='Tanggal Selesai'
-                        value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
-                        format='DD/MM/YYYY'
-                        onChange={newValue =>
-                          setFormData({
-                            ...formData,
-                            tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-                          })
-                        }
-                        slotProps={{ textField: { fullWidth: true } }} // Agar input full width
-                        sx={{ width: '100%' }}
-                      />
-                    </Box>
-                  </LocalizationProvider>
-                  <Typography variant='body2' sx={{ mt: 2 }}>
+                        <DatePicker
+                          label='Tanggal Selesai'
+                          value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
+                          format='DD/MM/YYYY'
+                          onChange={newValue =>
+                            setFormData({
+                              ...formData,
+                              tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                            })
+                          }
+                          slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                          sx={{ width: '100%' }}
+                        />
+                      </Box>
+                    </LocalizationProvider>
+                    {/* <Typography variant='body2' sx={{ mt: 2 }}>
                     Rekomendasi
                   </Typography>
                   <Box>
@@ -505,44 +543,45 @@ export default function DetailTemuan({ id }) {
                       value={formData.deskripsi}
                       onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
                     />
-                  </Box>
-                  <FormControl fullWidth margin='normal'>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      id='demo-simple-select'
-                      value={formData.status}
-                      label='Status'
-                      onChange={e => setFormData({ ...formData, status: e.target.value })}
+                  </Box> */}
+                    <FormControl fullWidth margin='normal'>
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        id='demo-simple-select'
+                        value={formData.status}
+                        label='Status'
+                        onChange={e => setFormData({ ...formData, status: e.target.value })}
+                      >
+                        <MenuItem value={0} selected>
+                          BD
+                        </MenuItem>
+                        <MenuItem value={1}>BS</MenuItem>
+                        <MenuItem value={2}>Selesai</MenuItem>
+                        <MenuItem value={3}>Batal</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button variant='contained' color='secondary' onClick={() => setIsEdit(false)}>
+                      Close
+                    </Button>
+                    <Button
+                      type='submit'
+                      variant='contained'
+                      color='primary'
+                      onClick={handleCreateRekomendasi}
+                      disabled={loading}
+                      loading={loading}
                     >
-                      <MenuItem value={0} selected>
-                        BD
-                      </MenuItem>
-                      <MenuItem value={1}>BS</MenuItem>
-                      <MenuItem value={2}>Selesai</MenuItem>
-                      <MenuItem value={3}>Batal</MenuItem>
-                    </Select>
-                  </FormControl>
-                </DialogContent>
-                <DialogActions>
-                  <Button variant='contained' color='secondary' onClick={() => setIsEdit(false)}>
-                    Close
-                  </Button>
-                  <Button
-                    type='submit'
-                    variant='contained'
-                    color='primary'
-                    onClick={handleCreateRekomendasi}
-                    disabled={loading}
-                    loading={loading}
-                  >
-                    Submit
-                  </Button>
-                </DialogActions>
-              </Dialog>
-            </Grid2>
-          )}
-        </Grid2>
-      </CardContent>
-    </Card>
+                      Submit
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+              </Grid2>
+            )}
+          </Grid2>
+        </CardContent>
+      </Card>
+    </>
   )
 }

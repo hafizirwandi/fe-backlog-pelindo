@@ -4,15 +4,32 @@ import { refreshToken } from './auth'
 
 const url = process.env.NEXT_PUBLIC_API_BASE_URL
 
-export const dataLha = async (page, pageSize, searchQuery) => {
+export const dataLha = async (page, pageSize, searchQuery, filters) => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/lha?page=${page}&page_size=${pageSize}`
+    const queryParams = new URLSearchParams()
 
-    if (searchQuery != '') {
-      urlRequest += `&keyword=${searchQuery}`
+    // Tambahkan parameter hanya jika tidak kosong
+    queryParams.append('page', page)
+    queryParams.append('page_size', pageSize)
+
+    if (searchQuery.trim() !== '') {
+      queryParams.append('keyword', searchQuery)
     }
+
+    // Jika filters ada isinya, tambahkan ke query params
+    if (filters && typeof filters === 'object') {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+          queryParams.append(`filters[${key}]`, value)
+        }
+      })
+
+      console.log(queryParams.toString())
+    }
+
+    let urlRequest = `${url}v1/lha?${queryParams.toString()}`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
