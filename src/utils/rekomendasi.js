@@ -38,7 +38,7 @@ export const createRekomendasi = async dataRekomendasi => {
 
     const data = await response.json()
 
-    if (!response.ok) throw new Error(data.message || 'Gagal delete data!')
+    if (!response.ok) throw new Error(data.message || 'Gagal create data!')
 
     return {
       status: true,
@@ -86,7 +86,7 @@ export const updateRekomendasi = async dataRekomendasi => {
 
     const data = await response.json()
 
-    if (!response.ok) throw new Error(data.message || 'Gagal delete data!')
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
 
     return {
       status: true,
@@ -208,7 +208,7 @@ export const dataRekomendasi = async id => {
 
     const data = await response.json()
 
-    if (!response.ok || response.status != 200) throw new Error(data.message || 'Gagal update data!')
+    if (!response.ok || response.status != 200) throw new Error(data.message || 'Gagal mengambil data!')
 
     return {
       status: true,

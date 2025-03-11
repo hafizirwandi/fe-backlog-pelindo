@@ -25,7 +25,8 @@ import {
   useTheme,
   IconButton,
   Chip,
-  Tooltip
+  Tooltip,
+  InputAdornment
 } from '@mui/material'
 import Swal from 'sweetalert2'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -47,6 +48,7 @@ import {
   updateRekomendasi
 } from '@/utils/rekomendasi'
 import { useAuth } from '@/context/AuthContext'
+import CustomTextField from '@/@core/components/mui/TextField'
 
 dayjs.locale('id')
 
@@ -114,7 +116,7 @@ export default function DetailTemuan() {
 
   const fetchRekomendasiData = async id => {
     if (!id) return
-    const idTemuan = id.id
+    const idTemuan = id
 
     try {
       const response = await dataRekomendasi(idTemuan)
@@ -142,9 +144,20 @@ export default function DetailTemuan() {
 
   useEffect(() => {
     fetchDetailData()
-    fetchRekomendasiData(id).then(data => setRows(data))
+
     setFormData(prev => ({ ...prev, temuan_id: id.id }))
   }, [fetchDetailData, id])
+
+  useEffect(() => {
+    if (detailData?.rekomendasi) {
+      setRows(
+        detailData.rekomendasi.map((item, index) => ({
+          ...item,
+          no: index + 1
+        }))
+      )
+    }
+  }, [detailData?.rekomendasi])
 
   if (!detailData) {
     return null
@@ -170,15 +183,7 @@ export default function DetailTemuan() {
       field: 'deskripsi',
       headerName: 'Deskripsi',
       width: 300,
-      renderCell: params => (
-        <div
-          style={{
-            paddingLeft: 8,
-            paddingRight: 8
-          }}
-          dangerouslySetInnerHTML={{ __html: params.value }}
-        />
-      )
+      renderCell: params => <p style={{ whiteSpace: 'pre-line' }}>{params.row.deskripsi}</p>
     },
     { field: 'batas_tanggal', headerName: 'Batas Tanggal', width: 150 },
     { field: 'tanggal_selesai', headerName: 'Tanggal Selesai', width: 150 },
@@ -322,8 +327,6 @@ export default function DetailTemuan() {
   const handleDeleteRekomendasi = async id => {
     setLoading(true)
 
-    console.log(formData.temuan_id)
-
     const result = await Swal.fire({
       title: 'Konfirmasi?',
       text: `Apakah anda yakin ingin menghapus Rekomendasi ini!`,
@@ -349,8 +352,6 @@ export default function DetailTemuan() {
           icon: 'success',
           showConfirmButton: false
         })
-
-        console.log(formData.temuan_id)
 
         fetchRekomendasiData(formData.temuan_id).then(data => setRows(data))
 
@@ -383,9 +384,14 @@ export default function DetailTemuan() {
         <CardHeader
           title='Detail Temuan'
           action={
-            <Button variant='contained' color='primary' href={`/lha/${detailData.lha_id}/detail`}>
-              Lihat Detail LHA
-            </Button>
+            <Box>
+              <Button variant='contained' color='secondary' href={`/temuan`} sx={{ mx: 2 }}>
+                Kembali
+              </Button>
+              <Button variant='contained' color='primary' href={`/lha/${detailData.lha_id}/detail`}>
+                Lihat Detail LHA
+              </Button>
+            </Box>
           }
         />
         <CardContent>
@@ -417,7 +423,9 @@ export default function DetailTemuan() {
                 Deskripsi
               </Typography>
               <Box sx={{ mt: 1 }}>
-                <Box dangerouslySetInnerHTML={{ __html: detailData.deskripsi ?? '-' }} />
+                <Typography variant='body1' gutterBottom style={{ whiteSpace: 'pre-line' }}>
+                  {detailData.deskripsi}
+                </Typography>
               </Box>
               <Divider sx={{ my: 2 }} />
               <Typography variant='h6' gutterBottom>
@@ -485,6 +493,8 @@ export default function DetailTemuan() {
                   open={isEdit}
                   onClose={() => setIsEdit(false)}
                   aria-describedby='dialog-description'
+                  maxWidth={'sm'}
+                  fullWidth={true}
                 >
                   <DialogTitle>Form Rekomendasi</DialogTitle>
                   <DialogContent>
@@ -535,6 +545,25 @@ export default function DetailTemuan() {
                         />
                       </Box>
                     </LocalizationProvider>
+                    <CustomTextField
+                      fullWidth
+                      rows={4}
+                      multiline
+                      label='Deskripsi'
+                      placeholder='Masukkan deskripsi...'
+                      onChange={e => setFormData({ ...formData, deskripsi: e.target.value })}
+                      value={formData.deskripsi}
+                      sx={{ '& .MuiInputBase-root.MuiFilledInput-root': { alignItems: 'baseline' }, mt: 3 }}
+                      slotProps={{
+                        input: {
+                          startAdornment: (
+                            <InputAdornment position='start'>
+                              <i className='tabler-message' />
+                            </InputAdornment>
+                          )
+                        }
+                      }}
+                    />
                     {/* <Typography variant='body2' sx={{ mt: 2 }}>
                     Rekomendasi
                   </Typography>
