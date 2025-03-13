@@ -234,7 +234,6 @@ export default function Tindaklanjut() {
       align: 'center',
       renderCell: params => (
         <Box>
-          {/* {user?.permissions?.includes('delete files') && detailData.status === '0' && ( */}
           <Tooltip title='Hapus File' arrow>
             <IconButton
               size='small'
@@ -245,7 +244,6 @@ export default function Tindaklanjut() {
               <Delete fontSize='small' />
             </IconButton>
           </Tooltip>
-          {/* )} */}
         </Box>
       )
     }
@@ -595,11 +593,9 @@ export default function Tindaklanjut() {
                 <Typography variant='h6' gutterBottom>
                   Daftar File LHA
                 </Typography>
-                {/* {user?.permissions?.includes('create files') && ( */}
                 <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
                   Tambah File
                 </Button>
-                {/* )} */}
                 <Box sx={{ mt: 2 }}>
                   <Divider sx={{ my: 2 }} />
                 </Box>
@@ -619,63 +615,61 @@ export default function Tindaklanjut() {
                 />
               </Box>
             </Grid2>
-            {user?.permissions?.includes('create rekomendasi') && (
-              <Grid2 size={{ xs: 12 }}>
-                <Dialog
-                  fullScreen={fullScreen}
-                  aria-labelledby='responsive-dialog-title'
-                  open={isEdit}
-                  onClose={() => {
-                    setFormFilesData({
-                      nama: '',
-                      file: ''
-                    })
-                    setIsEdit(false)
-                  }}
-                  aria-describedby='dialog-description'
-                  maxWidth={'sm'}
-                  fullWidth={true}
-                >
-                  <DialogTitle>Form Management File</DialogTitle>
-                  <DialogContent>
-                    <TextField
-                      fullWidth
-                      label='Nama File'
-                      variant='outlined'
-                      margin='normal'
-                      value={formFilesData.nama}
-                      onChange={e => setFormFilesData({ ...formFilesData, nama: e.target.value })}
-                    />
-                    <FileUploader onFileSelect={handleFileSelect} />
-                  </DialogContent>
-                  <DialogActions>
-                    <Button
-                      variant='contained'
-                      color='secondary'
-                      onClick={() => {
-                        setFormFilesData({
-                          nama: '',
-                          file: ''
-                        })
-                        setIsEdit(false)
-                      }}
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      type='submit'
-                      variant='contained'
-                      color='primary'
-                      onClick={handleUpload}
-                      disabled={loading}
-                      loading={loading}
-                    >
-                      {loading ? 'Uploading...' : 'Upload'}
-                    </Button>
-                  </DialogActions>
-                </Dialog>
-              </Grid2>
-            )}
+            <Grid2 size={{ xs: 12 }}>
+              <Dialog
+                fullScreen={fullScreen}
+                aria-labelledby='responsive-dialog-title'
+                open={isEdit}
+                onClose={() => {
+                  setFormFilesData({
+                    nama: '',
+                    file: ''
+                  })
+                  setIsEdit(false)
+                }}
+                aria-describedby='dialog-description'
+                maxWidth={'sm'}
+                fullWidth={true}
+              >
+                <DialogTitle>Form Management File</DialogTitle>
+                <DialogContent>
+                  <TextField
+                    fullWidth
+                    label='Nama File'
+                    variant='outlined'
+                    margin='normal'
+                    value={formFilesData.nama}
+                    onChange={e => setFormFilesData({ ...formFilesData, nama: e.target.value })}
+                  />
+                  <FileUploader onFileSelect={handleFileSelect} />
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    variant='contained'
+                    color='secondary'
+                    onClick={() => {
+                      setFormFilesData({
+                        nama: '',
+                        file: ''
+                      })
+                      setIsEdit(false)
+                    }}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    type='submit'
+                    variant='contained'
+                    color='primary'
+                    onClick={handleUpload}
+                    disabled={loading}
+                    loading={loading}
+                  >
+                    {loading ? 'Uploading...' : 'Upload'}
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Grid2>
           </Grid2>
         </CardContent>
       </Card>

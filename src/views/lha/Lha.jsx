@@ -209,7 +209,7 @@ export default function Lha() {
           )}
 
           {user?.permissions?.includes('read temuan') && (
-            <Tooltip title='Tambah Temuan' arrow>
+            <Tooltip title='Temuan' arrow>
               <IconButton
                 size='small'
                 color='primary'

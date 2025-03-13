@@ -211,18 +211,18 @@ export default function DetailTemuan() {
       align: 'center',
       renderCell: params => (
         <>
-          {/* {user?.permissions?.includes('read tindaklanjut') && ( */}
-          <Tooltip title='Tindaklanjut' arrow>
-            <IconButton
-              size='small'
-              color='primary'
-              sx={{ width: 24, height: 24 }}
-              onClick={() => handleUrlTindaklanjut(params.row.id)}
-            >
-              <PlaylistAdd fontSize='small' />
-            </IconButton>
-          </Tooltip>
-          {/* )} */}
+          {user?.permissions?.includes('read tindaklanjut') && (
+            <Tooltip title='Tindaklanjut' arrow>
+              <IconButton
+                size='small'
+                color='primary'
+                sx={{ width: 24, height: 24 }}
+                onClick={() => handleUrlTindaklanjut(params.row.id)}
+              >
+                <PlaylistAdd fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          )}
           {user?.permissions?.includes('update rekomendasi') && detailData.status === '0' && (
             <Tooltip title='Ubah Rekomendasi' arrow>
               <IconButton
@@ -386,10 +386,19 @@ export default function DetailTemuan() {
           title='Detail Temuan'
           action={
             <Box>
-              <Button variant='contained' color='secondary' href={`/temuan`} sx={{ mx: 2 }}>
+              <Button
+                variant='contained'
+                color='secondary'
+                onClick={() => router.push(`/temuan?lha=${detailData.lha_id}`)}
+                sx={{ mx: 2 }}
+              >
                 Kembali
               </Button>
-              <Button variant='contained' color='primary' href={`/lha/${detailData.lha_id}/detail`}>
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={() => router.push(`/lha/${detailData.lha_id}/detail`)}
+              >
                 Lihat Detail LHA
               </Button>
             </Box>

@@ -737,9 +737,11 @@ export default function Findings() {
             <CardHeader
               title='Temuan'
               action={
-                <Button variant='contained' color='primary' endIcon={<Add />} onClick={() => setOpenDialog(true)}>
-                  Tambah
-                </Button>
+                user?.permissions?.includes('create temuan') && (
+                  <Button variant='contained' color='primary' endIcon={<Add />} onClick={() => setOpenDialog(true)}>
+                    Tambah
+                  </Button>
+                )
               }
             />
             <CardContent>

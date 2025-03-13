@@ -67,47 +67,53 @@ const VerticalMenu = ({ scrollMenu }) => {
         <MenuItem activeUrls={['/home']} pathname={pathname} href='/home' icon={<i className='tabler-smart-home' />}>
           Home
         </MenuItem>
-        <MenuItem
-          activeUrls={['/roles', '/roles/*']}
-          pathname={pathname} // Current path from router or context
-          href='/roles'
-          icon={<i className='tabler-rosette' />}
-        >
-          Roles
-        </MenuItem>
-        <MenuItem
-          prefix='Users'
-          activeUrls={['/users', '/users/*']}
-          pathname={pathname} // Current path from router or context
-          href='/users'
-          icon={<i className='tabler-users' />}
-        ></MenuItem>
-        <SubMenu label='Organisasi' icon={<i className='tabler-affiliate' />}>
+        {user?.permissions?.includes('read roles') && (
           <MenuItem
-            prefix='Unit'
-            activeUrls={['/unit']}
+            activeUrls={['/roles', '/roles/*']}
             pathname={pathname} // Current path from router or context
-            href='/unit'
-          ></MenuItem>
+            href='/roles'
+            icon={<i className='tabler-rosette' />}
+          >
+            Roles
+          </MenuItem>
+        )}
+        {user?.permissions?.includes('read users') && (
           <MenuItem
-            prefix='Divisi'
-            activeUrls={['/divisi']}
+            prefix='Users'
+            activeUrls={['/users', '/users/*']}
             pathname={pathname} // Current path from router or context
-            href='/divisi'
+            href='/users'
+            icon={<i className='tabler-users' />}
           ></MenuItem>
-          <MenuItem
-            prefix='Departemen'
-            activeUrls={['/departemen']}
-            pathname={pathname} // Current path from router or context
-            href='/departemen'
-          ></MenuItem>
-          <MenuItem
-            prefix='Jabatan'
-            activeUrls={['/jabatan']}
-            pathname={pathname} // Current path from router or context
-            href='/jabatan'
-          ></MenuItem>
-        </SubMenu>
+        )}
+        {user?.permissions?.includes('read organisasi') && (
+          <SubMenu label='Organisasi' icon={<i className='tabler-affiliate' />}>
+            <MenuItem
+              prefix='Unit'
+              activeUrls={['/unit']}
+              pathname={pathname} // Current path from router or context
+              href='/unit'
+            ></MenuItem>
+            <MenuItem
+              prefix='Divisi'
+              activeUrls={['/divisi']}
+              pathname={pathname} // Current path from router or context
+              href='/divisi'
+            ></MenuItem>
+            <MenuItem
+              prefix='Departemen'
+              activeUrls={['/departemen']}
+              pathname={pathname} // Current path from router or context
+              href='/departemen'
+            ></MenuItem>
+            <MenuItem
+              prefix='Jabatan'
+              activeUrls={['/jabatan']}
+              pathname={pathname} // Current path from router or context
+              href='/jabatan'
+            ></MenuItem>
+          </SubMenu>
+        )}
         {user?.permissions?.includes('read lha') && (
           <SubMenu label='LHA' icon={<i className='tabler-clipboard-text' />}>
             <MenuItem
@@ -136,22 +142,26 @@ const VerticalMenu = ({ scrollMenu }) => {
             Temuan
           </MenuItem>
         )}
-        <MenuItem
-          activeUrls={['/report-findings']}
-          pathname={pathname} // Current path from router or context
-          href='/report-findings'
-          icon={<i className='tabler-clipboard-text' />}
-        >
-          Report Findings
-        </MenuItem>
-        <MenuItem
-          activeUrls={['/audit-trace', '/audit-trace/*']}
-          pathname={pathname} // Current path from router or context
-          href='/audit-trace'
-          icon={<i className='tabler-devices-check' />}
-        >
-          Audit Trace
-        </MenuItem>
+        {user?.permissions?.includes('read report') && (
+          <MenuItem
+            activeUrls={['/report-findings']}
+            pathname={pathname} // Current path from router or context
+            href='/report-findings'
+            icon={<i className='tabler-clipboard-text' />}
+          >
+            Report Findings
+          </MenuItem>
+        )}
+        {user?.permissions?.includes('read audit') && (
+          <MenuItem
+            activeUrls={['/audit-trace', '/audit-trace/*']}
+            pathname={pathname} // Current path from router or context
+            href='/audit-trace'
+            icon={<i className='tabler-devices-check' />}
+          >
+            Audit Trace
+          </MenuItem>
+        )}
       </Menu>
     </ScrollWrapper>
   )

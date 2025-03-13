@@ -42,7 +42,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
 import Swal from 'sweetalert2'
 
-import { Check, Send, Visibility } from '@mui/icons-material'
+import { Check, Clear, Send, Visibility, X } from '@mui/icons-material'
 
 import { detailsLha, findLha, rejectLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
@@ -191,21 +191,11 @@ export default function DetailLha() {
     try {
       let res = null
 
-      console.log('dataLha', dataLha)
-      console.log('role', user?.role?.includes('supervisor'))
-      console.log('permissions', user?.permissions?.includes('update status_lha'))
-
-      if (
-        dataLha.last_stage == 1 &&
-        user?.role?.includes('admin') &&
-        user?.permissions?.includes('update status_lha')
-      ) {
+      if (user?.permissions?.includes('update status-lha-admin')) {
         res = await sendLhaSpv(sendLha)
-      } else if (
-        dataLha.last_stage == 2 &&
-        user?.role?.includes('supervisor') &&
-        user?.permissions?.includes('update status_lha')
-      ) {
+      }
+
+      if (user?.permissions?.includes('update status-lha-spv')) {
         res = await sendLhaPic(sendLha)
       }
 
@@ -324,23 +314,51 @@ export default function DetailLha() {
               <Grid size={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant='h5'>Detail LHA</Typography>
                 <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
-                  {user?.permissions?.includes('update status_lha') && dataLha?.last_stage == roleId && (
+                  {user?.permissions?.includes('update status-lha-admin') && dataLha?.last_stage == roleId && (
                     <Button
                       variant='contained'
                       color='primary'
                       endIcon={dataLha?.status == 0 ? <Send /> : <Check />}
                       onClick={() => setOpenDialog(true)}
                     >
-                      {dataLha?.status == 0 ? 'Kirim' : 'Terima'}
+                      Kirim
                     </Button>
                   )}
-                  {user?.permissions?.includes('update status_lha') &&
+                  {user?.permissions?.includes('update status-lha-spv') &&
                     dataLha?.last_stage == roleId &&
                     dataLha?.status != 0 && (
-                      <Button variant='contained' color='error' onClick={() => setOpenDialogTolak(true)}>
+                      <Button
+                        variant='contained'
+                        color='error'
+                        endIcon={<Clear />}
+                        onClick={() => setOpenDialogTolak(true)}
+                      >
                         Tolak
                       </Button>
                     )}
+                  {user?.permissions?.includes('update status-lha-spv') && dataLha?.last_stage == roleId && (
+                    <Button variant='contained' color='primary' endIcon={<Check />} onClick={() => setOpenDialog(true)}>
+                      Terima
+                    </Button>
+                  )}
+
+                  {user?.permissions?.includes('update status-lha-pic') &&
+                    dataLha?.last_stage == roleId &&
+                    dataLha?.status != 0 && (
+                      <Button
+                        variant='contained'
+                        color='error'
+                        endIcon={<Clear />}
+                        onClick={() => setOpenDialogTolak(true)}
+                      >
+                        Tolak
+                      </Button>
+                    )}
+                  {user?.permissions?.includes('update status-lha-pic') && dataLha?.last_stage == roleId && (
+                    <Button variant='contained' color='primary' endIcon={<Check />} onClick={() => setOpenDialog(true)}>
+                      Terima
+                    </Button>
+                  )}
                 </Box>
               </Grid>
             </CardActions>
