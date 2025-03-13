@@ -211,6 +211,18 @@ export default function DetailTemuan() {
       align: 'center',
       renderCell: params => (
         <>
+          {/* {user?.permissions?.includes('read tindaklanjut') && ( */}
+          <Tooltip title='Tindaklanjut' arrow>
+            <IconButton
+              size='small'
+              color='primary'
+              sx={{ width: 24, height: 24 }}
+              onClick={() => handleUrlTindaklanjut(params.row.id)}
+            >
+              <PlaylistAdd fontSize='small' />
+            </IconButton>
+          </Tooltip>
+          {/* )} */}
           {user?.permissions?.includes('update rekomendasi') && detailData.status === '0' && (
             <Tooltip title='Ubah Rekomendasi' arrow>
               <IconButton
@@ -223,27 +235,18 @@ export default function DetailTemuan() {
               </IconButton>
             </Tooltip>
           )}
-          {/* {user?.permissions?.includes('read tindaklanjut') && ( */}
-          <Tooltip title='Tindak Lanjut' arrow>
-            <IconButton
-              size='small'
-              color='primary'
-              sx={{ width: 24, height: 24 }}
-              onClick={() => handleUrlTindaklanjut(params.row.id)}
-            >
-              <PlaylistAdd fontSize='small' />
-            </IconButton>
-          </Tooltip>
-          {/* )} */}
+
           {user?.permissions?.includes('delete rekomendasi') && detailData.status === '0' && (
-            <IconButton
-              size='small'
-              color='error'
-              onClick={() => handleDeleteRekomendasi(params.row.id)}
-              sx={{ width: 24, height: 24 }}
-            >
-              <Delete fontSize='small' />
-            </IconButton>
+            <Tooltip title='Tindak Lanjut' arrow>
+              <IconButton
+                size='small'
+                color='error'
+                onClick={() => handleDeleteRekomendasi(params.row.id)}
+                sx={{ width: 24, height: 24 }}
+              >
+                <Delete fontSize='small' />
+              </IconButton>
+            </Tooltip>
           )}
         </>
       )
@@ -374,8 +377,6 @@ export default function DetailTemuan() {
         setLoading(false)
       }
     }
-
-    setLoading(false)
   }
 
   return (

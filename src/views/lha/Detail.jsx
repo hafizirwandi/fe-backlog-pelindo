@@ -31,7 +31,8 @@ import {
   CardActions,
   InputAdornment,
   CardHeader,
-  Paper
+  Paper,
+  Tooltip
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Grid from '@mui/material/Grid2'
@@ -41,7 +42,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
 import Swal from 'sweetalert2'
 
-import { Check, Send } from '@mui/icons-material'
+import { Check, Send, Visibility } from '@mui/icons-material'
 
 import { detailsLha, findLha, rejectLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
@@ -55,14 +56,14 @@ function Row({ row }) {
     <>
       <TableRow>
         <TableCell sx={{ width: 40 }}>
-          {row.tindakLanjut && (
+          {row.tindaklanjut.length > 0 && (
             <IconButton aria-label='expand row' size='small' onClick={() => setOpen(!open)}>
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           )}
         </TableCell>
         <TableCell sx={{ width: 400 }}>
-          <Box dangerouslySetInnerHTML={{ __html: row.deskripsi ?? '-' }} />
+          <p style={{ whiteSpace: 'pre-line' }}>{row.deskripsi ?? '-'}</p>
         </TableCell>
         <TableCell>{row.batas_tanggal}</TableCell>
         <TableCell>
@@ -74,11 +75,45 @@ function Row({ row }) {
           />
         </TableCell>
       </TableRow>
-      <TableRow>
-        <TableCell colSpan={4} style={{ paddingBottom: 0, paddingTop: 0 }}>
-          <Collapse in={open} timeout='auto' unmountOnExit></Collapse>
-        </TableCell>
-      </TableRow>
+      {row.tindaklanjut.length > 0 && (
+        <TableRow sx={{ paddingX: 5 }}>
+          <TableCell colSpan={4} style={{ paddingBottom: 0, paddingTop: 0 }}>
+            <Collapse in={open} timeout='auto' unmountOnExit>
+              <Box sx={{ margin: 2 }}>
+                <Table size='small' aria-label='purchases'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Tindak Lanjut</TableCell>
+                      <TableCell>File Pendukung</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {row.tindaklanjut.map((tindaklanjut, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{tindaklanjut.deskripsi}</TableCell>
+                        <TableCell>
+                          {tindaklanjut.files.map((file, indexFIle) => (
+                            <Tooltip key={indexFIle} title={file.nama} arrow>
+                              <IconButton
+                                size='small'
+                                color='primary'
+                                onClick={() => window.open(file.url ?? '#', '_blank', 'noopener,noreferrer')}
+                                sx={{ width: 24, height: 24, ml: 1 }}
+                              >
+                                <Visibility fontSize='small' />
+                              </IconButton>
+                            </Tooltip>
+                          ))}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      )}
     </>
   )
 }

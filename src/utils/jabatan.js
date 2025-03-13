@@ -4,11 +4,11 @@ import { refreshToken } from './auth'
 
 const url = process.env.NEXT_PUBLIC_API_BASE_URL
 
-export const dataDepartemenByDivisi = async (page, pageSize, searchQuery, divisiId) => {
+export const dataJabatan = async (page, pageSize, searchQuery) => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/departemen/find-by-divisi-id/${divisiId}?page=${page}&page_size=${pageSize}`
+    let urlRequest = `${url}v1/jabatan?page=${page}&page_size=${pageSize}`
 
     if (searchQuery != '') {
       urlRequest += `&keyword=${searchQuery}`
@@ -18,7 +18,7 @@ export const dataDepartemenByDivisi = async (page, pageSize, searchQuery, divisi
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataDepartemenByDivisi(page, pageSize, searchQuery, divisiId)
+        return dataJabatan(page, pageSize, searchQuery)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -33,7 +33,7 @@ export const dataDepartemenByDivisi = async (page, pageSize, searchQuery, divisi
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataDepartemenByDivisi(page, pageSize, searchQuery, divisiId)
+        return dataJabatan(page, pageSize, searchQuery)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -57,66 +57,17 @@ export const dataDepartemenByDivisi = async (page, pageSize, searchQuery, divisi
   }
 }
 
-export const dataDepartemen = async (page, pageSize, searchQuery) => {
+export const createJabatan = async dataJabatan => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/departemen?page=${page}&page_size=${pageSize}`
-
-    if (searchQuery != '') {
-      urlRequest += `&keyword=${searchQuery}`
-    }
+    let urlRequest = `${url}v1/jabatan`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return dataDepartemen(page, pageSize, searchQuery)
-      } else {
-        throw new Error('Session expired, please login again.')
-      }
-    }
-
-    const response = await fetch(urlRequest, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-    })
-
-    if (response.status === 401) {
-      const refreshSuccess = await refreshToken()
-
-      if (refreshSuccess) {
-        return dataDepartemen(page, pageSize, searchQuery)
-      } else {
-        throw new Error('Session expired, please login again.')
-      }
-    }
-
-    const data = await response.json()
-
-    if (!response.ok) throw new Error(data.message || 'Gagal mengambil data!')
-
-    return data
-  } catch (error) {
-    return {
-      status: false,
-      data: [],
-      message: error
-    }
-  }
-}
-
-export const createDepartemen = async dataDepartemen => {
-  try {
-    const token = Cookies.get('token')
-
-    let urlRequest = `${url}v1/departemen`
-
-    if (!token) {
-      const refreshSuccess = await refreshToken()
-
-      if (refreshSuccess) {
-        return createDepartemen(dataDepartemen)
+        return createJabatan(dataJabatan)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -126,8 +77,7 @@ export const createDepartemen = async dataDepartemen => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        nama: dataDepartemen.nama,
-        divisi_id: dataDepartemen.divisi_id
+        nama: dataJabatan.nama
       })
     })
 
@@ -135,7 +85,7 @@ export const createDepartemen = async dataDepartemen => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return createDepartemen(dataDepartemen)
+        return createJabatan(dataJabatan)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -157,45 +107,17 @@ export const createDepartemen = async dataDepartemen => {
   }
 }
 
-export const findDepartemen = async id => {
-  const token = Cookies.get('token')
-
-  let urlRequest = `${url}v1/departemen/${id}`
-
-  if (!token) {
-    const refreshSuccess = await refreshToken()
-
-    if (refreshSuccess) {
-      return findDepartemen(id)
-    } else {
-      throw new Error('Session expired, please login again.')
-    }
-  }
-
-  const response = await fetch(urlRequest, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-  })
-
-  const data = await response.json()
-
-  return {
-    status: true,
-    data: data.data
-  }
-}
-
-export const updateDepartemen = async (id, dataDepartemen) => {
+export const updateJabatan = async (id, dataJabatan) => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/departemen/${id}`
+    let urlRequest = `${url}v1/jabatan/${id}`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return updateDepartemen(id, dataDepartemen)
+        return updateJabatan(id, dataJabatan)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -205,9 +127,8 @@ export const updateDepartemen = async (id, dataDepartemen) => {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        id: dataDepartemen.id,
-        nama: dataDepartemen.nama,
-        divisi_id: dataDepartemen.divisi_id
+        id: dataJabatan.id,
+        nama: dataJabatan.nama
       })
     })
 
@@ -215,7 +136,7 @@ export const updateDepartemen = async (id, dataDepartemen) => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return updateDepartemen(id, dataUnit)
+        return updateJabatan(id, dataJabatan)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -238,17 +159,17 @@ export const updateDepartemen = async (id, dataDepartemen) => {
   }
 }
 
-export const deleteDepartemen = async id => {
+export const deleteJabatan = async id => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/departemen/${id}`
+    let urlRequest = `${url}v1/jabatan/${id}`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return deleteDepartemen(id)
+        return deleteJabatan(id)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -263,7 +184,7 @@ export const deleteDepartemen = async id => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return deleteDepartemen(id)
+        return deleteJabatan(id)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -283,5 +204,33 @@ export const deleteDepartemen = async id => {
       data: [],
       message: err
     }
+  }
+}
+
+export const findJabatan = async id => {
+  const token = Cookies.get('token')
+
+  let urlRequest = `${url}v1/jabatan/${id}`
+
+  if (!token) {
+    const refreshSuccess = await refreshToken()
+
+    if (refreshSuccess) {
+      return findJabatan(id)
+    } else {
+      throw new Error('Session expired, please login again.')
+    }
+  }
+
+  const response = await fetch(urlRequest, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+  })
+
+  const data = await response.json()
+
+  return {
+    status: true,
+    data: data.data
   }
 }

@@ -4,9 +4,9 @@ import TextField from '@mui/material/TextField'
 import Autocomplete from '@mui/material/Autocomplete'
 import CircularProgress from '@mui/material/CircularProgress'
 
-import { dataUnit } from '@/utils/unit'
+import { dataJabatan } from '@/utils/jabatan'
 
-export default function UnitSelect({ value, onSelect }) {
+export default function JabatanSelect({ value, onSelect }) {
   const [open, setOpen] = React.useState(false)
   const [options, setOptions] = React.useState([])
   const [loading, setLoading] = React.useState(false)
@@ -17,7 +17,7 @@ export default function UnitSelect({ value, onSelect }) {
     setLoading(true)
 
     try {
-      const response = await dataUnit(1, 100, keyword)
+      const response = await dataJabatan(1, 1000, keyword)
 
       if (response.data) {
         const uniqueOptions = response.data.filter(
@@ -29,7 +29,7 @@ export default function UnitSelect({ value, onSelect }) {
         setOptions([])
       }
     } catch (error) {
-      console.error('Error fetching unit:', error)
+      console.error('Error fetching jabatan:', error)
     }
 
     setLoading(false)
@@ -89,7 +89,7 @@ export default function UnitSelect({ value, onSelect }) {
       renderInput={params => (
         <TextField
           {...params}
-          label='Pilih Unit'
+          label='Pilih Jabatan'
           InputProps={{
             ...params.InputProps,
             endAdornment: (
