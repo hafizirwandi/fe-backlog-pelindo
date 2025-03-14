@@ -44,7 +44,7 @@ import Swal from 'sweetalert2'
 
 import { Check, Clear, Send, Visibility, X } from '@mui/icons-material'
 
-import { detailsLha, findLha, rejectLha, sendLhaPic, sendLhaSpv } from '@/utils/lha'
+import { detailsLha, findLha, rejectLha, sendLhaAuditor, sendLhaPic, sendLhaPj, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
 import QuillEditor from '@/components/QuillEditor'
 import CustomTextField from '@/@core/components/mui/TextField'
@@ -144,6 +144,7 @@ export default function DetailLha() {
     stage_name: '',
     status: '',
     status_name: '',
+    temuan_last_stage: '',
     temuan: []
   })
 
@@ -167,6 +168,7 @@ export default function DetailLha() {
           status_name: data.status_name ?? '-',
           temuan: data.temuan,
           last_stage: data.last_stage,
+          temuan_last_stage: data.temuan_last_stage,
           stage: data.stage,
           status: data.status
         })
@@ -197,6 +199,14 @@ export default function DetailLha() {
 
       if (user?.permissions?.includes('update status-lha-spv')) {
         res = await sendLhaPic(sendLha)
+      }
+
+      if (user?.permissions?.includes('update status-lha-pic')) {
+        res = await sendLhaPj(sendLha)
+      }
+
+      if (user?.permissions?.includes('update status-lha-penanggungjawab')) {
+        res = await sendLhaAuditor(sendLha)
       }
 
       if (res.status) {
@@ -305,6 +315,10 @@ export default function DetailLha() {
 
   const roleId = user?.roleAndPermissions?.[0]?.id
 
+  // console.log('role id :', roleId)
+  // console.log('temuan last stage :', dataLha?.temuan_last_stage)
+  // console.log('last stage :', dataLha?.last_stage)
+
   return (
     <>
       <Grid container spacing={2} sx={{ mt: 5, mb: 5 }}>
@@ -343,7 +357,7 @@ export default function DetailLha() {
                   )}
 
                   {user?.permissions?.includes('update status-lha-pic') &&
-                    dataLha?.last_stage == roleId &&
+                    dataLha?.temuan_last_stage == roleId &&
                     dataLha?.status != 0 && (
                       <Button
                         variant='contained'
@@ -354,11 +368,34 @@ export default function DetailLha() {
                         Tolak
                       </Button>
                     )}
-                  {user?.permissions?.includes('update status-lha-pic') && dataLha?.last_stage == roleId && (
+                  {user?.permissions?.includes('update status-lha-pic') && dataLha?.temuan_last_stage == roleId && (
                     <Button variant='contained' color='primary' endIcon={<Check />} onClick={() => setOpenDialog(true)}>
                       Terima
                     </Button>
                   )}
+                  {user?.permissions?.includes('update status-lha-penanggungjawab') &&
+                    dataLha?.temuan_last_stage == roleId &&
+                    dataLha?.status != 0 && (
+                      <Button
+                        variant='contained'
+                        color='error'
+                        endIcon={<Clear />}
+                        onClick={() => setOpenDialogTolak(true)}
+                      >
+                        Tolak
+                      </Button>
+                    )}
+                  {user?.permissions?.includes('update status-lha-penanggungjawab') &&
+                    dataLha?.temuan_last_stage == roleId && (
+                      <Button
+                        variant='contained'
+                        color='primary'
+                        endIcon={<Check />}
+                        onClick={() => setOpenDialog(true)}
+                      >
+                        Terima
+                      </Button>
+                    )}
                 </Box>
               </Grid>
             </CardActions>
