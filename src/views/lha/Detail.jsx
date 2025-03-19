@@ -586,19 +586,32 @@ export default function DetailLha() {
                             </>
                           )}
 
-                          {row.last_stage == 1 && row.stage.action == 'ditolak' && (
-                            <Button
-                              variant='contained'
-                              fullWidth
-                              color='primary'
-                              endIcon={<Send />}
-                              onClick={() => {
-                                setOpenDialog(true)
-                                setTemuanId(row.id)
-                              }}
-                            >
-                              Kirim
-                            </Button>
+                          {row.last_stage == 1 && row.stage.action == 'ditolak' && checkId(row.last_stage) && (
+                            <>
+                              <Button
+                                variant='contained'
+                                fullWidth
+                                color='primary'
+                                endIcon={<Send />}
+                                onClick={() => {
+                                  setOpenDialog(true)
+                                  setTemuanId(row.id)
+                                }}
+                              >
+                                Kirim
+                              </Button>
+                              <Button
+                                variant='contained'
+                                fullWidth
+                                color='warning'
+                                onClick={() => {
+                                  router.push(`/temuan/${row.id}/rekomendasi`, '_blank')
+                                }}
+                                sx={{ my: 1 }}
+                              >
+                                Perbaiki
+                              </Button>
+                            </>
                           )}
 
                           {row.status >= 2 && (
