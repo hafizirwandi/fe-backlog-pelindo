@@ -50,6 +50,10 @@ ul:not([class]) {
   padding-inline-start: 40px;
 }
 
+.swal2-container {
+  z-index: 2000 !important; /* Pastikan lebih tinggi dari MUI Dialog */
+}
+
 /*! Do not remove the following styles */
 /*
   Fix the popout / submenu closing issue when using hover trigger to open the menu and using

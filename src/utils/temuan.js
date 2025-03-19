@@ -144,7 +144,19 @@ export const createTemuan = async dataTemuan => {
 
     const data = await response.json()
 
-    if (!response.ok) throw new Error(data.message || 'Gagal delete data!')
+    if (!response.ok) {
+      let errorMessage = 'Gagal simpan data!'
+
+      if (data.message && typeof data.message === 'object') {
+        errorMessage = Object.entries(data.message)
+          .map(([key, messages]) => `${key}: ${messages.join(', ')}`)
+          .join('; ')
+      } else if (typeof data.message === 'string') {
+        errorMessage = data.message
+      }
+
+      throw new Error(errorMessage)
+    }
 
     return {
       status: true,
@@ -229,7 +241,19 @@ export const updateTemuan = async (id, dataTemuan) => {
 
     const data = await response.json()
 
-    if (!response.ok) throw new Error(data.message || 'Gagal delete data!')
+    if (!response.ok) {
+      let errorMessage = 'Gagal update data!'
+
+      if (data.message && typeof data.message === 'object') {
+        errorMessage = Object.entries(data.message)
+          .map(([key, messages]) => `${key}: ${messages.join(', ')}`)
+          .join('; ')
+      } else if (typeof data.message === 'string') {
+        errorMessage = data.message
+      }
+
+      throw new Error(errorMessage)
+    }
 
     return {
       status: true,
@@ -288,5 +312,245 @@ export const deleteTemuan = async id => {
       data: [],
       message: err
     }
+  }
+}
+
+export const rejectTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/reject-temuan`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return rejectTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return rejectTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const submitTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/submit-temuan`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return submitTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return submitTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const acceptTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/accept-temuan`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return acceptTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return acceptTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const sendTemuanPic = async dataTemuan => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/send-temuan-to-pic`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return sendTemuanPic(dataTemuan)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataTemuan)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return sendTemuanPic(dataTemuan)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const generateTemuanPdf = async id => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/cetak/temuan/${id}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return generateTemuanPdf(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return generateTemuanPdf(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error('Gagal mendapatkan PDF')
+    }
+
+    const blob = await response.blob()
+
+    return blob
+  } catch (error) {
+    console.error('Error dalam generatePdf:', error)
+    throw error
   }
 }

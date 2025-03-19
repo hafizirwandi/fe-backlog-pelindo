@@ -584,7 +584,6 @@ export default function Users() {
               <MenuItem value={2}>Supervisor</MenuItem>
               <MenuItem value={3}>PIC</MenuItem>
               <MenuItem value={4}>Penanggung Jawab</MenuItem>
-              <MenuItem value={5}>Auditor</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>

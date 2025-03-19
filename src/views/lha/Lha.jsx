@@ -179,16 +179,17 @@ export default function Lha() {
         </>
       )
     },
-    {
-      field: 'last_stage',
-      headerName: 'Stage/Posisi LHA',
-      flex: 1,
-      renderCell: params => (
-        <>
-          <Chip label={params.row.stage_name ?? '-'} variant='outlined' color='primary' size='small' />
-        </>
-      )
-    },
+
+    // {
+    //   field: 'last_stage',
+    //   headerName: 'Stage/Posisi LHA',
+    //   flex: 1,
+    //   renderCell: params => (
+    //     <>
+    //       <Chip label={params.row.stage_name ?? '-'} variant='outlined' color='primary' size='small' />
+    //     </>
+    //   )
+    // },
     {
       field: 'actions',
       headerName: 'Aksi',

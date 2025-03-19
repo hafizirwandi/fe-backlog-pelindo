@@ -7,6 +7,8 @@ import { NextResponse } from 'next/server'
 
 import Cookies from 'js-cookie'
 
+import { refreshToken } from '@/utils/auth'
+
 const AuthContext = createContext()
 const url = process.env.NEXT_PUBLIC_API_BASE_URL
 
@@ -17,9 +19,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = Cookies.get('token')
+      let token = Cookies.get('token')
 
-      if (!token) return
+      if (!token) {
+        const newToken = await refreshToken()
+
+        if (newToken) {
+          token = Cookies.get('token')
+        }
+      }
 
       try {
         const res = await fetch(`${url}v1/user/profile`, {

@@ -336,6 +336,10 @@ export default function Tindaklanjut() {
           setRows(data)
         })
 
+        setFormFilesData({
+          nama: '',
+          file: ''
+        })
         setIsEdit(false)
       }
     } catch (error) {

@@ -211,6 +211,14 @@ export default function Findings() {
     { field: 'nomor', headerName: 'No. Temuan', width: 100 },
     { field: 'judul', headerName: 'Judul', flex: 1 },
     {
+      field: 'last_tage',
+      headerName: 'Posisi Saat Ini',
+      width: 150,
+      renderCell: params => (
+        <Chip label={params.row.stage_name ?? '-'} variant='outlined' color='primary' size='small' />
+      )
+    },
+    {
       field: 'status',
       headerName: 'Status',
       width: 100,
@@ -570,9 +578,9 @@ export default function Findings() {
           <Typography variant='h6' gutterBottom>
             Deskripsi
           </Typography>
-          <Box sx={{ mt: 1 }}>
-            <Box dangerouslySetInnerHTML={{ __html: detailTemuan.deskripsi ?? '-' }} />
-          </Box>
+          <Typography variant='body1' gutterBottom style={{ whiteSpace: 'pre-line' }}>
+            {detailTemuan.deskripsi}
+          </Typography>
           <Divider sx={{ my: 2 }} />
           <Typography variant='h6' gutterBottom>
             Unit

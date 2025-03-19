@@ -223,18 +223,19 @@ export default function DetailTemuan() {
               </IconButton>
             </Tooltip>
           )}
-          {user?.permissions?.includes('update rekomendasi') && detailData.status === '0' && (
-            <Tooltip title='Ubah Rekomendasi' arrow>
-              <IconButton
-                size='small'
-                color='warning'
-                onClick={() => handleEdit(params.row.id)}
-                sx={{ width: 24, height: 24 }}
-              >
-                <Edit fontSize='small' />
-              </IconButton>
-            </Tooltip>
-          )}
+          {user?.permissions?.includes('update rekomendasi') &&
+            (detailData.status === '0' || detailData.last_stage === 3) && (
+              <Tooltip title='Ubah Rekomendasi' arrow>
+                <IconButton
+                  size='small'
+                  color='warning'
+                  onClick={() => handleEdit(params.row.id)}
+                  sx={{ width: 24, height: 24 }}
+                >
+                  <Edit fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
 
           {user?.permissions?.includes('delete rekomendasi') && detailData.status === '0' && (
             <Tooltip title='Tindak Lanjut' arrow>
@@ -495,7 +496,9 @@ export default function DetailTemuan() {
                 />
               </Box>
             </Grid2>
-            {user?.permissions?.includes('create rekomendasi') && (
+            {user?.permissions?.some(permission =>
+              ['create rekomendasi', 'update rekomendasi'].includes(permission)
+            ) && (
               <Grid2 size={{ xs: 12 }}>
                 <Dialog
                   fullScreen={fullScreen}
