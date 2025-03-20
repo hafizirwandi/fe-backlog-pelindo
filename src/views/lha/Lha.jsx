@@ -510,77 +510,79 @@ export default function Lha() {
       <Typography variant='h4' gutterBottom>
         LHA (Laporan Hasil Audit)
       </Typography>
-      <Grid container spacing={2} sx={{ mt: 5 }}>
-        <Grid size={{ sm: 12, md: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant='h6'>Tambah LHA</Typography>
-              <Typography variant='body2' color='textSecondary'>
-                Inputkan hasil audit baru untuk merekam proses dan temuan dari audit yang telah dilakukan.
-              </Typography>
-              <Button variant='contained' startIcon={<Add />} sx={{ mt: 2 }} onClick={() => setOpenDialog(true)}>
-                Tambah
-              </Button>
-            </CardContent>
-          </Card>
+      {user?.permissions?.includes('create lha') && (
+        <Grid container spacing={2} sx={{ mt: 5 }}>
+          <Grid size={{ sm: 12, md: 4 }}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant='h6'>Tambah LHA</Typography>
+                <Typography variant='body2' color='textSecondary'>
+                  Inputkan hasil audit baru untuk merekam proses dan temuan dari audit yang telah dilakukan.
+                </Typography>
+                <Button variant='contained' startIcon={<Add />} sx={{ mt: 2 }} onClick={() => setOpenDialog(true)}>
+                  Tambah
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Card sx={{ width: '100%' }}>
+              <CardContent>
+                <Typography variant='h6'>Filter Data LHA</Typography>
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <CustomTextField
+                    select
+                    fullWidth
+                    defaultValue=''
+                    label='Posisi LHA'
+                    slotProps={{
+                      select: {
+                        displayEmpty: true,
+                        multiple: false
+                      }
+                    }}
+                    onChange={e => setFilterTable({ ...filterTable, last_stage: e.target.value })}
+                  >
+                    <MenuItem value=''>
+                      <em>Pilih Status</em>
+                    </MenuItem>
+                    <MenuItem value={1}>Admin</MenuItem>
+                    <MenuItem value={2}>Supervisor</MenuItem>
+                    <MenuItem value={3}>PIC</MenuItem>
+                    <MenuItem value={4}>Penanggung Jawab</MenuItem>
+                    <MenuItem value={5}>Auditor</MenuItem>
+                    <MenuItem value={6}>Selesai</MenuItem>
+                  </CustomTextField>
+                  <CustomTextField
+                    select
+                    fullWidth
+                    defaultValue=''
+                    label='Status'
+                    slotProps={{
+                      select: {
+                        displayEmpty: true,
+                        multiple: false
+                      }
+                    }}
+                    onChange={e => setFilterTable({ ...filterTable, status: e.target.value })}
+                  >
+                    <MenuItem value=''>
+                      <em>Pilih Status</em>
+                    </MenuItem>
+                    <MenuItem value={0}>Draf</MenuItem>
+                    <MenuItem value={1}>Proses</MenuItem>
+                    <MenuItem value={3}>Selesai</MenuItem>
+                    <MenuItem value={2}>Ditolak</MenuItem>
+                  </CustomTextField>
+                </Box>
+                <Button variant='contained' sx={{ mt: 2 }} fullWidth onClick={handleFilter}>
+                  Terapkan Filter
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Card sx={{ width: '100%' }}>
-            <CardContent>
-              <Typography variant='h6'>Filter Data LHA</Typography>
-              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                <CustomTextField
-                  select
-                  fullWidth
-                  defaultValue=''
-                  label='Posisi LHA'
-                  slotProps={{
-                    select: {
-                      displayEmpty: true,
-                      multiple: false
-                    }
-                  }}
-                  onChange={e => setFilterTable({ ...filterTable, last_stage: e.target.value })}
-                >
-                  <MenuItem value=''>
-                    <em>Pilih Status</em>
-                  </MenuItem>
-                  <MenuItem value={1}>Admin</MenuItem>
-                  <MenuItem value={2}>Supervisor</MenuItem>
-                  <MenuItem value={3}>PIC</MenuItem>
-                  <MenuItem value={4}>Penanggung Jawab</MenuItem>
-                  <MenuItem value={5}>Auditor</MenuItem>
-                  <MenuItem value={6}>Selesai</MenuItem>
-                </CustomTextField>
-                <CustomTextField
-                  select
-                  fullWidth
-                  defaultValue=''
-                  label='Status'
-                  slotProps={{
-                    select: {
-                      displayEmpty: true,
-                      multiple: false
-                    }
-                  }}
-                  onChange={e => setFilterTable({ ...filterTable, status: e.target.value })}
-                >
-                  <MenuItem value=''>
-                    <em>Pilih Status</em>
-                  </MenuItem>
-                  <MenuItem value={0}>Draf</MenuItem>
-                  <MenuItem value={1}>Proses</MenuItem>
-                  <MenuItem value={3}>Selesai</MenuItem>
-                  <MenuItem value={2}>Ditolak</MenuItem>
-                </CustomTextField>
-              </Box>
-              <Button variant='contained' sx={{ mt: 2 }} fullWidth onClick={handleFilter}>
-                Terapkan Filter
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      )}
       {user?.permissions?.includes('create lha', 'update lha') && (
         <Dialog
           fullScreen={fullScreen}

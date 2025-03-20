@@ -123,13 +123,13 @@ const VerticalMenu = ({ scrollMenu }) => {
             >
               List LHA
             </MenuItem>
-            <MenuItem
+            {/* <MenuItem
               activeUrls={['/lha/riwayat']}
               pathname={pathname} // Current path from router or context
               href='/lha/riwayat'
             >
               Riwayat
-            </MenuItem>
+            </MenuItem> */}
           </SubMenu>
         )}
         {user?.permissions?.includes('read temuan') && (
@@ -140,6 +140,16 @@ const VerticalMenu = ({ scrollMenu }) => {
             icon={<i className='tabler-building' />}
           >
             Temuan
+          </MenuItem>
+        )}
+        {user?.permissions?.includes('read hasil-auditor') && (
+          <MenuItem
+            activeUrls={['/hasil-auditor']}
+            pathname={pathname} // Current path from router or context
+            href='/hasil-auditor'
+            icon={<i className='tabler-clipboard-text' />}
+          >
+            Hasil Auditor
           </MenuItem>
         )}
         {user?.permissions?.includes('read report') && (

@@ -153,6 +153,7 @@ const LoginV2 = ({ mode }) => {
         </Link>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div className='flex flex-col gap-1'>
+            <img src='/logo-pelindo.png' alt='Logo' className='w-[200px] h-auto' />
             <Typography variant='h4'>{`${themeConfig.aplicationName}`}</Typography>
             <Typography>Silahkan login untuk masuk ke sistem!</Typography>
           </div>
