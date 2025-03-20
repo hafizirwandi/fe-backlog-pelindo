@@ -554,3 +554,146 @@ export const generateTemuanPdf = async id => {
     throw error
   }
 }
+
+export const logTemuan = async id => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/log-stage/${id}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return logTemuan(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return logTemuan(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal mengambil data!')
+
+    return data
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const tolakSelesaiInternalTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/tolak-selesai-internal`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return tolakSelesaiInternalTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return tolakSelesaiInternalTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const selesaiInternalTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/selesai-internal`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return selesaiInternalTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return selesaiInternalTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}

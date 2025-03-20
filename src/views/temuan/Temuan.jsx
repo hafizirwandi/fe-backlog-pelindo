@@ -210,6 +210,7 @@ export default function Findings() {
     { field: 'no', headerName: 'No', width: 50 },
     { field: 'nomor', headerName: 'No. Temuan', width: 100 },
     { field: 'judul', headerName: 'Judul', flex: 1 },
+    { field: 'divisi', headerName: 'Divisi', flex: 1 },
     {
       field: 'last_tage',
       headerName: 'Posisi Saat Ini',

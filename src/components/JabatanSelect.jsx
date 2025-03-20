@@ -8,7 +8,7 @@ import { dataJabatan } from '@/utils/jabatan'
 
 export default function JabatanSelect({ value, onSelect }) {
   const [open, setOpen] = React.useState(false)
-  const [options, setOptions] = React.useState([])
+  const [options, setOptions] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
   const [selectedValue, setSelectedValue] = React.useState(null)
@@ -37,7 +37,7 @@ export default function JabatanSelect({ value, onSelect }) {
 
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (options.length === 0) {
+      if (options === null) {
         fetchData(inputValue)
       }
     }, 500)

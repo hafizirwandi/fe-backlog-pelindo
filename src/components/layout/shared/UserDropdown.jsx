@@ -86,8 +86,8 @@ const UserDropdown = () => {
       >
         <Avatar
           ref={anchorRef}
-          alt='John Doe'
-          src='/images/avatars/1.png'
+          alt={user ? user.nama : '-'}
+          src='/blank-profile.webp'
           onClick={handleDropdownOpen}
           className='cursor-pointer bs-[38px] is-[38px]'
         />
@@ -111,7 +111,7 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-6 gap-2' tabIndex={-1}>
-                    <Avatar alt='John Doe' src='/images/avatars/1.png' />
+                    <Avatar alt={user ? user.nama : ''} src='/blank-profile.webp' />
                     <div className='flex items-start flex-col'>
                       <Typography className='font-medium' color='text.primary'>
                         {user ? user.nama : '-'}
@@ -120,10 +120,6 @@ const UserDropdown = () => {
                     </div>
                   </div>
                   <Divider className='mlb-1' />
-                  <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e)}>
-                    <i className='tabler-user' />
-                    <Typography color='text.primary'>My Profile</Typography>
-                  </MenuItem>
                   <MenuItem className='mli-2 gap-3' onClick={e => handleDropdownClose(e)}>
                     <i className='tabler-settings' />
                     <Typography color='text.primary'>Settings</Typography>

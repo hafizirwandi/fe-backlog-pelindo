@@ -59,7 +59,7 @@ const Logo = ({ color }) => {
 
   return (
     <div className='flex items-center'>
-      <VuexyLogo className='text-2xl text-primary' />
+      <img src='/logo.png' alt='Logo' className='h-8 w-8 mr-2' />
       <LogoText
         color={color}
         ref={logoTextRef}

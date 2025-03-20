@@ -1,5 +1,5 @@
 'use client'
-import React, { use, useCallback, useEffect, useState } from 'react'
+import React, { use, useCallback, useEffect, useRef, useState } from 'react'
 
 import { notFound, useParams, useRouter } from 'next/navigation'
 
@@ -32,7 +32,10 @@ import {
   InputAdornment,
   CardHeader,
   Paper,
-  Tooltip
+  Tooltip,
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import Grid from '@mui/material/Grid2'
@@ -42,13 +45,24 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 
 import Swal from 'sweetalert2'
 
-import { Check, Clear, Print, Send, Visibility, X } from '@mui/icons-material'
+import { Check, Clear, OpenInNew, Print, Send, Visibility, X } from '@mui/icons-material'
+import { Timeline, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from '@mui/lab'
+import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem'
 
 import { detailsLha, findLha, rejectLha, sendLhaAuditor, sendLhaPic, sendLhaPj, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
 import QuillEditor from '@/components/QuillEditor'
 import CustomTextField from '@/@core/components/mui/TextField'
-import { acceptTemuan, generateTemuanPdf, rejectTemuan, sendTemuanPic, submitTemuan } from '@/utils/temuan'
+import {
+  acceptTemuan,
+  generateTemuanPdf,
+  logTemuan,
+  rejectTemuan,
+  selesaiInternalTemuan,
+  sendTemuanPic,
+  submitTemuan,
+  tolakSelesaiInternalTemuan
+} from '@/utils/temuan'
 
 function Row({ row }) {
   const [open, setOpen] = useState(false)
@@ -98,18 +112,25 @@ function Row({ row }) {
                       <TableRow key={index}>
                         <TableCell>{tindaklanjut.deskripsi}</TableCell>
                         <TableCell align='center'>
-                          {tindaklanjut.files.map((file, indexFIle) => (
-                            <Tooltip key={indexFIle} title={file.nama} arrow>
-                              <IconButton
-                                size='small'
-                                color='primary'
-                                onClick={() => window.open(file.url ?? '#', '_blank', 'noopener,noreferrer')}
-                                sx={{ width: 24, height: 24, ml: 1 }}
-                              >
-                                <Visibility fontSize='small' />
-                              </IconButton>
-                            </Tooltip>
-                          ))}
+                          <ul style={{ margin: 0, padding: 0 }}>
+                            {tindaklanjut.files.map((item, index) => (
+                              <li key={index} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                                <span>
+                                  {index + 1}. {item.nama}
+                                </span>
+                                <Button
+                                  size='small'
+                                  color='primary'
+                                  variant='contained'
+                                  sx={{ mt: 1 }}
+                                  onClick={() => window.open(item.url ?? '#', '_blank', 'noopener,noreferrer')}
+                                  endIcon={<OpenInNew />}
+                                >
+                                  Lihat File
+                                </Button>
+                              </li>
+                            ))}
+                          </ul>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -132,6 +153,14 @@ export default function DetailLha() {
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
   const [loading, setLoading] = useState(false)
   const [temuanId, setTemuanId] = useState(null)
+  const [listLogTemuan, setListLogTemuan] = useState(null)
+  const [openDialogLog, setOpenDialogLog] = useState(false)
+  const [selesaiInternal, setSelesaiInternal] = useState(false)
+  const [expanded, setExpanded] = useState(null)
+
+  const handleExpanded = panel => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : null)
+  }
 
   const { user, setUser } = useAuth()
 
@@ -154,6 +183,8 @@ export default function DetailLha() {
     temuan_last_stage: '',
     temuan: []
   })
+
+  const dialogRef = useRef(null)
 
   const id = useParams()
 
@@ -268,6 +299,8 @@ export default function DetailLha() {
             router.replace('/not-found')
           }
         })
+
+        setExpanded(null)
       }
     } catch (error) {
       Swal.fire({
@@ -349,6 +382,7 @@ export default function DetailLha() {
       })
     } finally {
       setLoading(false)
+      setExpanded(null)
     }
   }
 
@@ -379,6 +413,163 @@ export default function DetailLha() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleLogTemuan = async id => {
+    if (!id) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'ID Temuan belum di set.',
+        icon: 'error'
+      })
+    }
+
+    const data = await logTemuan(id)
+
+    if (data.status && data.data.length > 0) {
+      setListLogTemuan(data.data)
+      setOpenDialogLog(true)
+    } else {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Gagal mengambil data.',
+        icon: 'error'
+      })
+    }
+
+    setLoading(false)
+  }
+
+  const handleSelesaiInternal = async () => {
+    const sendLha = {
+      temuan_id: temuanId,
+      keterangan: formData.keterangan
+    }
+
+    setLoading(true)
+
+    try {
+      let res = await selesaiInternalTemuan(sendLha)
+
+      if (res.status) {
+        setOpenDialog(false)
+
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1000,
+          backdrop: false
+        })
+
+        setFormData({
+          lha_id: '',
+          temuan_id: '',
+          keterangan: ''
+        })
+        setTemuanId(null)
+
+        detailsLha(dataLha.id).then(res => {
+          if (res.status) {
+            const data = res.data
+
+            setDataLha({
+              id: data.id,
+              judul: data.judul ?? '-',
+              nomor: data.no_lha ?? '-',
+              tanggal: data.tanggal ?? new Date().toISOString().split('T')[0],
+              periode: data.periode ?? '-',
+              deskripsi: data.deskripsi ?? '-',
+              stage_name: data.stage_name ?? '-',
+              status_name: data.status_name ?? '-',
+              temuan: data.temuan,
+              temuan_last_stage: data.temuan_last_stage,
+              last_stage: data.last_stage,
+              stage: data.stage,
+              status: data.status
+            })
+          } else {
+            router.replace('/not-found')
+          }
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+      setExpanded(null)
+    }
+  }
+
+  const handleTolakInternal = async () => {
+    const sendLha = {
+      temuan_id: temuanId,
+      keterangan: formData.keterangan
+    }
+
+    setLoading(true)
+
+    try {
+      let res = await tolakSelesaiInternalTemuan(sendLha)
+
+      if (res.status) {
+        setOpenDialogTolak(false)
+
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 1000,
+          backdrop: false
+        })
+
+        setFormData({
+          lha_id: '',
+          temuan_id: '',
+          keterangan: ''
+        })
+        setTemuanId(null)
+
+        detailsLha(dataLha.id).then(res => {
+          if (res.status) {
+            const data = res.data
+
+            setDataLha({
+              id: data.id,
+              judul: data.judul ?? '-',
+              nomor: data.no_lha ?? '-',
+              tanggal: data.tanggal ?? new Date().toISOString().split('T')[0],
+              periode: data.periode ?? '-',
+              deskripsi: data.deskripsi ?? '-',
+              stage_name: data.stage_name ?? '-',
+              status_name: data.status_name ?? '-',
+              temuan: data.temuan,
+              temuan_last_stage: data.temuan_last_stage,
+              last_stage: data.last_stage,
+              stage: data.stage,
+              status: data.status
+            })
+          } else {
+            router.replace('/not-found')
+          }
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+      setExpanded(null)
     }
   }
 
@@ -414,11 +605,6 @@ export default function DetailLha() {
                       { label: 'Judul', value: dataLha.judul },
                       { label: 'Tanggal', value: dataLha.tanggal },
                       { label: 'Periode', value: dataLha.periode },
-
-                      // {
-                      //   label: 'Posisi Sekarang',
-                      //   value: <Chip label={dataLha.stage_name} variant='outlined' color='primary' size='small' />
-                      // },
                       {
                         label: 'Status',
                         value: <Chip label={dataLha.status_name} variant='outlined' color='success' size='small' />
@@ -426,10 +612,6 @@ export default function DetailLha() {
                       {
                         label: 'Deskripsi',
                         value: <Box dangerouslySetInnerHTML={{ __html: dataLha.deskripsi }} />
-                      },
-                      dataLha?.stage?.keterangan && {
-                        label: 'Keterangan',
-                        value: <Box dangerouslySetInnerHTML={{ __html: dataLha.stage.keterangan }} />
                       }
                     ]
                       .filter(Boolean)
@@ -464,6 +646,8 @@ export default function DetailLha() {
                       borderRadius: 2,
                       overflow: 'hidden'
                     }}
+                    expanded={expanded === `panel-${index}-${item.divisi_id}`}
+                    onChange={handleExpanded(`panel-${index}-${item.divisi_id}`)}
                   >
                     <AccordionSummary
                       sx={{
@@ -523,6 +707,38 @@ export default function DetailLha() {
                                         </Typography>
                                       </>
                                     )
+                                  },
+                                  {
+                                    label: 'Log',
+                                    value: (
+                                      <>
+                                        <Button
+                                          variant='outlined'
+                                          color='secondary'
+                                          size='small'
+                                          onClick={() => {
+                                            setTemuanId(prev => {
+                                              const newId = row.id
+
+                                              setTimeout(() => {
+                                                handleLogTemuan(newId)
+                                              }, 1000)
+
+                                              return newId
+                                            })
+                                            setLoading(true)
+                                          }}
+                                          disabled={loading}
+                                        >
+                                          {loading ? 'Memuat...' : 'Log Temuan'}
+                                        </Button>
+                                        <TimelineLogDialog
+                                          open={openDialogLog}
+                                          onClose={() => setOpenDialogLog(false)}
+                                          logs={listLogTemuan}
+                                        />
+                                      </>
+                                    )
                                   }
                                 ]
                                   .filter(Boolean)
@@ -543,17 +759,19 @@ export default function DetailLha() {
                           {row.last_stage == 3 &&
                             checkId(row.last_stage) &&
                             user.permissions.includes('create tindaklanjut') && (
-                              <Button
-                                variant='contained'
-                                fullWidth
-                                color='warning'
-                                onClick={() => {
-                                  router.push(`/temuan/${row.id}/rekomendasi`)
-                                }}
-                                sx={{ my: 1 }}
-                              >
-                                Tindaklanjut
-                              </Button>
+                              <>
+                                <Button
+                                  variant='contained'
+                                  fullWidth
+                                  color='warning'
+                                  onClick={() => {
+                                    router.push(`/temuan/${row.id}/rekomendasi`)
+                                  }}
+                                  sx={{ my: 1 }}
+                                >
+                                  Tindaklanjut
+                                </Button>
+                              </>
                             )}
 
                           {row.last_stage > 1 && checkId(row.last_stage) && (
@@ -569,7 +787,7 @@ export default function DetailLha() {
                                 }}
                                 sx={{ my: 1 }}
                               >
-                                Terima
+                                Approve
                               </Button>
                               <Button
                                 fullWidth
@@ -581,7 +799,7 @@ export default function DetailLha() {
                                   setTemuanId(row.id)
                                 }}
                               >
-                                Tolak
+                                Reject
                               </Button>
                             </>
                           )}
@@ -637,6 +855,40 @@ export default function DetailLha() {
                               {loading ? 'Mencetak...' : 'Cetak'}
                             </Button>
                           )}
+
+                          {row.last_stage === 5 &&
+                            row.status == 1 &&
+                            user?.permissions.includes('update selesai-internal') && (
+                              <>
+                                <Button
+                                  variant='contained'
+                                  fullWidth
+                                  color='success'
+                                  endIcon={<Check />}
+                                  onClick={() => {
+                                    setOpenDialog(true)
+                                    setTemuanId(row.id)
+                                    setSelesaiInternal(true)
+                                  }}
+                                >
+                                  Selesai Internal
+                                </Button>
+                                <Button
+                                  variant='contained'
+                                  fullWidth
+                                  color='error'
+                                  endIcon={<Clear />}
+                                  onClick={() => {
+                                    setOpenDialogTolak(true)
+                                    setTemuanId(row.id)
+                                    setSelesaiInternal(true)
+                                  }}
+                                  sx={{ my: 1 }}
+                                >
+                                  Tolak
+                                </Button>
+                              </>
+                            )}
                         </Grid>
                       </Grid>
                       <Typography variant='h5' gutterBottom sx={{ mt: 5 }}>
@@ -675,14 +927,6 @@ export default function DetailLha() {
                         </Table>
                       </TableContainer>
                     </AccordionDetails>
-                    {/* <AccordionActions>
-                    <Button variant='contained' color='warning'>
-                      Ubah
-                    </Button>
-                    <Button variant='contained' color='error'>
-                      Hapus
-                    </Button>
-                  </AccordionActions> */}
                   </Accordion>
                 ))}
               </Grid>
@@ -693,7 +937,7 @@ export default function DetailLha() {
       <Grid>
         <Dialog
           fullScreen={fullScreen}
-          aria-labelledby='responsive-dialog-title'
+          aria-labelledby='konfirmasi-dialog'
           open={openDialog}
           onClose={() => {
             setFormData({
@@ -703,7 +947,7 @@ export default function DetailLha() {
             setOpenDialog(false)
             setTemuanId(null)
           }}
-          aria-describedby='dialog-description'
+          aria-describedby='dialog-konfirmasi-description'
           fullWidth={true}
           maxWidth={'sm'}
         >
@@ -731,36 +975,40 @@ export default function DetailLha() {
                 }
               }}
             />
-            {/* <Typography variant='body2' sx={{ mt: 2 }}>
-              Keterangan
-            </Typography>
-            <Box>
-              <QuillEditor
-                value={formData.keterangan}
-                onChange={content => setFormData(prev => ({ ...prev, keterangan: content }))}
-              />
-            </Box> */}
           </DialogContent>
           <DialogActions>
             <Button variant='contained' color='secondary' onClick={() => setOpenDialog(false)}>
               Close
             </Button>
-            <Button
-              type='submit'
-              variant='contained'
-              color='primary'
-              onClick={handleTeruskan}
-              disabled={loading}
-              loading={loading}
-            >
-              Submit
-            </Button>
+            {selesaiInternal ? (
+              <Button
+                type='submit'
+                variant='contained'
+                color='primary'
+                onClick={handleSelesaiInternal}
+                disabled={loading}
+                loading={loading}
+              >
+                Submit
+              </Button>
+            ) : (
+              <Button
+                type='submit'
+                variant='contained'
+                color='primary'
+                onClick={handleTeruskan}
+                disabled={loading}
+                loading={loading}
+              >
+                Submit
+              </Button>
+            )}
           </DialogActions>
         </Dialog>
 
         <Dialog
           fullScreen={fullScreen}
-          aria-labelledby='responsive-dialog-title'
+          aria-labelledby='dialog-tolak'
           open={openDialogTolak}
           onClose={() => {
             setFormData({
@@ -770,7 +1018,7 @@ export default function DetailLha() {
             setOpenDialog(false)
             setTemuanId(null)
           }}
-          aria-describedby='dialog-description'
+          aria-describedby='dialog-tolak-description'
           fullWidth={true}
           maxWidth={'sm'}
         >
@@ -798,33 +1046,99 @@ export default function DetailLha() {
                 }
               }}
             />
-            {/* <Typography variant='body2' sx={{ mt: 2 }}>
-              Keterangan
-            </Typography>
-            <Box>
-              <QuillEditor
-                value={formData.keterangan}
-                onChange={content => setFormData(prev => ({ ...prev, keterangan: content }))}
-              />
-            </Box> */}
           </DialogContent>
           <DialogActions>
             <Button variant='contained' color='secondary' onClick={() => setOpenDialogTolak(false)}>
               Close
             </Button>
-            <Button
-              type='submit'
-              variant='contained'
-              color='primary'
-              onClick={handleTolak}
-              disabled={loading}
-              loading={loading}
-            >
-              Submit
-            </Button>
+            {selesaiInternal ? (
+              <Button
+                type='submit'
+                variant='contained'
+                color='primary'
+                onClick={handleTolakInternal}
+                disabled={loading}
+                loading={loading}
+              >
+                Submit
+              </Button>
+            ) : (
+              <Button
+                type='submit'
+                variant='contained'
+                color='primary'
+                onClick={handleTolak}
+                disabled={loading}
+                loading={loading}
+              >
+                Submit
+              </Button>
+            )}
           </DialogActions>
         </Dialog>
       </Grid>
     </>
+  )
+}
+
+const getColor = action => {
+  switch (action) {
+    case 'submit':
+      return 'warning'
+    case 'diterima':
+      return 'success'
+    case 'ditolak':
+      return 'error'
+    case 'draf':
+      return 'secondary'
+    default:
+      return 'primary'
+  }
+}
+
+const TimelineLogDialog = ({ open, onClose, logs }) => {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
+      <DialogTitle>Log Temuan</DialogTitle>
+      <DialogContent>
+        {logs?.length > 0 ? (
+          <Box sx={{ pl: 2 }}>
+            <Timeline
+              sx={{
+                [`& .${timelineItemClasses.root}:before`]: {
+                  flex: 0,
+                  padding: 0
+                }
+              }}
+            >
+              {logs.map((log, index) => (
+                <TimelineItem key={index}>
+                  <TimelineSeparator>
+                    <TimelineDot color={getColor(log.action)} />
+                    {index !== logs.length - 1 && <TimelineConnector />}
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Typography variant='body1' fontWeight='bold'>
+                      {log.stage_before ?? log.nama}
+                    </Typography>
+                    <Typography variant='body2' color='textSecondary'>
+                      {new Date(log.created_at).toLocaleString()}
+                    </Typography>
+                    <Typography variant='body2' color='textPrimary'>
+                      {log.keterangan}
+                    </Typography>
+                    <Typography variant='body2' color='textSecondary' fontStyle='italic'>
+                      Action: {log.action}
+                    </Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
+          </Box>
+        ) : (
+          <p>Tidak ada log tersedia.</p>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

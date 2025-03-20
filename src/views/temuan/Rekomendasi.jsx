@@ -186,7 +186,7 @@ export default function DetailTemuan() {
       renderCell: params => <p style={{ whiteSpace: 'pre-line' }}>{params.row.deskripsi}</p>
     },
     { field: 'batas_tanggal', headerName: 'Batas Tanggal', width: 150 },
-    { field: 'tanggal_selesai', headerName: 'Tanggal Selesai', width: 150 },
+    detailData.last_stage !== 1 ? { field: 'tanggal_selesai', headerName: 'Tanggal Selesai', width: 150 } : null,
     {
       field: 'status',
       headerName: 'Status',
@@ -223,21 +223,20 @@ export default function DetailTemuan() {
               </IconButton>
             </Tooltip>
           )}
-          {user?.permissions?.includes('update rekomendasi') &&
-            (detailData.status === '0' || detailData.last_stage === 3) && (
-              <Tooltip title='Ubah Rekomendasi' arrow>
-                <IconButton
-                  size='small'
-                  color='warning'
-                  onClick={() => handleEdit(params.row.id)}
-                  sx={{ width: 24, height: 24 }}
-                >
-                  <Edit fontSize='small' />
-                </IconButton>
-              </Tooltip>
-            )}
+          {user?.permissions?.includes('update rekomendasi') && checkId(detailData.last_stage) && (
+            <Tooltip title='Ubah Rekomendasi' arrow>
+              <IconButton
+                size='small'
+                color='warning'
+                onClick={() => handleEdit(params.row.id)}
+                sx={{ width: 24, height: 24 }}
+              >
+                <Edit fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          )}
 
-          {user?.permissions?.includes('delete rekomendasi') && detailData.status === '0' && (
+          {user?.permissions?.includes('delete rekomendasi') && checkId(detailData.last_stage) && (
             <Tooltip title='Tindak Lanjut' arrow>
               <IconButton
                 size='small'
@@ -252,7 +251,7 @@ export default function DetailTemuan() {
         </>
       )
     }
-  ]
+  ].filter(Boolean)
 
   const handleCreateRekomendasi = async () => {
     const dataRekomendasi = {
@@ -380,6 +379,10 @@ export default function DetailTemuan() {
     }
   }
 
+  const checkId = idToCheck => {
+    return user?.roleAndPermissions?.some(role => role.id === idToCheck)
+  }
+
   return (
     <>
       <Card>
@@ -472,7 +475,7 @@ export default function DetailTemuan() {
                 <Typography variant='h6' gutterBottom>
                   Rekomendasi
                 </Typography>
-                {user?.permissions?.includes('create rekomendasi') && detailData.status === '0' && (
+                {user?.permissions?.includes('create rekomendasi') && checkId(detailData.last_stage) && (
                   <Button variant='contained' color='primary' onClick={() => setIsEdit(true)}>
                     Tambah Rekomendasi
                   </Button>
@@ -502,10 +505,10 @@ export default function DetailTemuan() {
               <Grid2 size={{ xs: 12 }}>
                 <Dialog
                   fullScreen={fullScreen}
-                  aria-labelledby='responsive-dialog-title'
+                  aria-labelledby='rekomendasi-dialog'
                   open={isEdit}
                   onClose={() => setIsEdit(false)}
-                  aria-describedby='dialog-description'
+                  aria-describedby='dialog-rekomendasi-description'
                   maxWidth={'sm'}
                   fullWidth={true}
                 >
@@ -542,20 +545,21 @@ export default function DetailTemuan() {
                           slotProps={{ textField: { fullWidth: true } }} // Agar input full width
                           sx={{ width: '100%' }}
                         />
-
-                        <DatePicker
-                          label='Tanggal Selesai'
-                          value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
-                          format='DD/MM/YYYY'
-                          onChange={newValue =>
-                            setFormData({
-                              ...formData,
-                              tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
-                            })
-                          }
-                          slotProps={{ textField: { fullWidth: true } }} // Agar input full width
-                          sx={{ width: '100%' }}
-                        />
+                        {detailData.last_stage !== 1 && (
+                          <DatePicker
+                            label='Tanggal Selesai'
+                            value={formData.tanggal_selesai ? dayjs(formData.tanggal_selesai) : null}
+                            format='DD/MM/YYYY'
+                            onChange={newValue =>
+                              setFormData({
+                                ...formData,
+                                tanggal_selesai: newValue ? dayjs(newValue).format('YYYY-MM-DD') : ''
+                              })
+                            }
+                            slotProps={{ textField: { fullWidth: true } }} // Agar input full width
+                            sx={{ width: '100%' }}
+                          />
+                        )}
                       </Box>
                     </LocalizationProvider>
                     <CustomTextField
@@ -595,9 +599,9 @@ export default function DetailTemuan() {
                         onChange={e => setFormData({ ...formData, status: e.target.value })}
                       >
                         <MenuItem value={0} selected>
-                          BD
+                          BD (Belum Ditindaklanjuti)
                         </MenuItem>
-                        <MenuItem value={1}>BS</MenuItem>
+                        <MenuItem value={1}>BS (Belum Selesai)</MenuItem>
                         <MenuItem value={2}>Selesai</MenuItem>
                         <MenuItem value={3}>Batal</MenuItem>
                       </Select>

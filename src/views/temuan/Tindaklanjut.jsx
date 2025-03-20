@@ -26,7 +26,10 @@ import {
   IconButton,
   Chip,
   Tooltip,
-  InputAdornment
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material'
 import Swal from 'sweetalert2'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -695,28 +698,35 @@ export default function Tindaklanjut() {
                 rows={rowsTindaklanjut}
                 columns={[
                   { field: 'id', headerName: 'ID', hide: true },
-                  { field: 'no', headerName: 'No' },
-                  { field: 'deskripsi', headerName: 'Deskripsi', flex: 2 },
-                  { field: 'tanggal', headerName: 'Tanggal', flex: 1 },
+                  { field: 'no', headerName: 'No', width: 10 },
+                  { field: 'deskripsi', headerName: 'Deskripsi', width: 250 },
+                  { field: 'tanggal', headerName: 'Tanggal' },
                   {
                     field: 'files',
                     headerName: 'File Dukung',
                     headerAlign: 'center',
-                    align: 'center',
+                    flex: 1,
                     renderCell: params => (
                       <>
-                        {params.row.files.map((item, index) => (
-                          <Tooltip key={index} title={item.nama} arrow>
-                            <IconButton
-                              size='small'
-                              color='primary'
-                              onClick={() => window.open(item.url ?? '#', '_blank', 'noopener,noreferrer')}
-                              sx={{ width: 24, height: 24 }}
-                            >
-                              <VisibilityIcon fontSize='small' />
-                            </IconButton>
-                          </Tooltip>
-                        ))}
+                        <ul style={{ margin: 0, padding: 0 }}>
+                          {params.row.files.map((item, index) => (
+                            <li key={index} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                              <span>
+                                {index + 1}. {item.nama}
+                              </span>
+                              <Button
+                                size='small'
+                                color='primary'
+                                variant='contained'
+                                sx={{ mt: 1 }}
+                                onClick={() => window.open(item.url ?? '#', '_blank', 'noopener,noreferrer')}
+                                endIcon={<OpenInNew />}
+                              >
+                                Lihat File
+                              </Button>
+                            </li>
+                          ))}
+                        </ul>
                       </>
                     )
                   },
