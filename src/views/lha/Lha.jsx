@@ -525,7 +525,7 @@ export default function Lha() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid size={{ xs: 12, md: 8 }}>
+          {/* <Grid size={{ xs: 12, md: 8 }}>
             <Card sx={{ width: '100%' }}>
               <CardContent>
                 <Typography variant='h6'>Filter Data LHA</Typography>
@@ -580,7 +580,7 @@ export default function Lha() {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Grid> */}
         </Grid>
       )}
       {user?.permissions?.includes('create lha', 'update lha') && (
