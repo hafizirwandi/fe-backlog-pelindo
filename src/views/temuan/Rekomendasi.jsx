@@ -223,31 +223,35 @@ export default function DetailTemuan() {
               </IconButton>
             </Tooltip>
           )}
-          {user?.permissions?.includes('update rekomendasi') && checkId(detailData.last_stage) && (
-            <Tooltip title='Ubah Rekomendasi' arrow>
-              <IconButton
-                size='small'
-                color='warning'
-                onClick={() => handleEdit(params.row.id)}
-                sx={{ width: 24, height: 24 }}
-              >
-                <Edit fontSize='small' />
-              </IconButton>
-            </Tooltip>
-          )}
+          {user?.permissions?.includes('update rekomendasi') &&
+            checkId(detailData.last_stage) &&
+            !params.row.is_spi && (
+              <Tooltip title='Ubah Rekomendasi' arrow>
+                <IconButton
+                  size='small'
+                  color='warning'
+                  onClick={() => handleEdit(params.row.id)}
+                  sx={{ width: 24, height: 24 }}
+                >
+                  <Edit fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
 
-          {user?.permissions?.includes('delete rekomendasi') && checkId(detailData.last_stage) && (
-            <Tooltip title='Tindak Lanjut' arrow>
-              <IconButton
-                size='small'
-                color='error'
-                onClick={() => handleDeleteRekomendasi(params.row.id)}
-                sx={{ width: 24, height: 24 }}
-              >
-                <Delete fontSize='small' />
-              </IconButton>
-            </Tooltip>
-          )}
+          {user?.permissions?.includes('delete rekomendasi') &&
+            checkId(detailData.last_stage) &&
+            !params.row.is_spi && (
+              <Tooltip title='Tindak Lanjut' arrow>
+                <IconButton
+                  size='small'
+                  color='error'
+                  onClick={() => handleDeleteRekomendasi(params.row.id)}
+                  sx={{ width: 24, height: 24 }}
+                >
+                  <Delete fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
         </>
       )
     }

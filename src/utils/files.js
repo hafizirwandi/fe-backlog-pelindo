@@ -146,3 +146,50 @@ export const deleteFile = async id => {
     }
   }
 }
+
+export const dataFilesByLhaSpi = async lha_id => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/files/find-by-lha-spi/${lha_id}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return dataFilesByLhaSpi(lha_id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return dataFilesByLhaSpi(lha_id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok || response.status != 200) throw new Error(data.message || 'Gagal mengambil data.')
+
+    return {
+      status: true,
+      data: data.data
+    }
+  } catch (err) {
+    return {
+      status: false,
+      message: err
+    }
+  }
+}

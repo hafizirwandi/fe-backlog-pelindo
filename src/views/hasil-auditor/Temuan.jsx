@@ -1,332 +1,358 @@
 'use client'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { use, useCallback, useEffect, useState } from 'react'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
   Card,
   CardContent,
   CardHeader,
-  Stack,
-  Chip,
-  useMediaQuery,
-  Pagination,
-  PaginationItem,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  useTheme,
+  Typography,
+  Box,
   Divider,
+  Grid2,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Chip,
+  Tooltip,
   InputAdornment,
-  DialogActions
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material'
 import Swal from 'sweetalert2'
-import Grid from '@mui/material/Grid2'
-import {
-  DataGrid,
-  gridPageCountSelector,
-  GridPagination,
-  useGridApiContext,
-  useGridSelector,
-  gridClasses
-} from '@mui/x-data-grid'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import dayjs from 'dayjs'
+import { Edit, Delete, Visibility as VisibilityIcon, PlaylistAdd, OpenInNew, Visibility } from '@mui/icons-material'
 
-import { Timeline, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from '@mui/lab'
-import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem'
+import { DataGrid, gridClasses } from '@mui/x-data-grid'
 
-import { History } from '@mui/icons-material'
-import { useDebouncedCallback } from '@coreui/react-pro'
-
-import {
-  dataTemuan,
-  dataTemuanByLha,
-  dataTemuanHasilAuditor,
-  findTemuan,
-  logTemuan,
-  terimaAuditorTemuan,
-  tolakAuditorTemuan
-} from '@/utils/temuan'
+import { findRekomendasi } from '@/utils/rekomendasi'
 import { useAuth } from '@/context/AuthContext'
+import FileUploader from '@/components/InputFiles'
+import { dataFilesByLha, dataFilesByLhaSpi, deleteFile, uploadFiles } from '@/utils/files'
 import CustomTextField from '@/@core/components/mui/TextField'
+import {
+  createTindaklanjut,
+  dataTindaklanjut,
+  deleteTindaklanjut,
+  findTindaklanjut,
+  updateTindaklanjut
+} from '@/utils/tindaklanjut'
+import { dataTemuanHasilAuditor, findTemuan, inputHasilAuditor } from '@/utils/temuan'
+import { findLha } from '@/utils/lha'
 
-const CustomToolbar = ({ searchQuery, setSearchQuery }) => {
-  const [localSearch, setLocalSearch] = useState(searchQuery)
-
-  const debouncedSearch = useDebouncedCallback(value => {
-    setSearchQuery(value)
-  }, 500)
-
-  useEffect(() => {
-    debouncedSearch(localSearch)
-  }, [localSearch, debouncedSearch])
-
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', padding: '8px 16px', borderBottom: '1px solid #ddd' }}>
-      <Stack direction='row' alignItems='center' spacing={1} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-        <TextField
-          variant='outlined'
-          placeholder='Search...'
-          value={localSearch}
-          onChange={e => setLocalSearch(e.target.value)}
-          size='small'
-        />
-      </Stack>
-    </Box>
-  )
-}
+dayjs.locale('id')
 
 const statusColor = {
   0: 'secondary',
   1: 'primary',
-  2: 'success'
+  2: 'success',
+  3: 'error'
 }
 
-export default function Findings() {
-  const theme = useTheme()
-
+export default function Temuan() {
   const { user } = useAuth()
-  const searchParams = useSearchParams()
-  const paramLha = searchParams.get('lha')
-  const [listLogTemuan, setListLogTemuan] = useState(null)
-  const [openDialogLog, setOpenDialogLog] = useState(false)
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
+  const [loading, setLoading] = useState(false)
+  const [rowsFiles, setRowsFiles] = useState([])
+  const params = useParams()
+  const router = useRouter()
+  const [loadingHasil, setLoadingHasil] = useState(false)
+
+  const [openDialogFiles, setOpenDialogFiles] = useState(false)
+  const [openDialogHasil, setOpenDialogHasil] = useState(false)
+  const [dataLha, setDataLha] = useState(null)
+
+  const [rowsTemuan, setRowsTemuan] = useState()
+
+  const [formHasil, setFormHasil] = useState({
+    temuan_id: '',
+    keterangan: '',
+    files: []
+  })
+
+  const [formFilesData, setFormFilesData] = useState({
+    lha_id: '',
+    nama: '',
+    file: ''
+  })
+
+  const [isTemuan, setIsTemuan] = useState(null)
+
   const [temuanId, setTemuanId] = useState(null)
 
-  const router = useRouter()
+  const fetchDetailData = useCallback(async () => {
+    if (!params) return
 
-  const [formData, setFormData] = useState({
-    keterangan: '',
-    temuan_id: ''
-  })
+    try {
+      const idLha = params.id
 
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [totalRows, setTotalRows] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
+      setLoading(true)
+      const response = await findLha(idLha)
 
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10
-  })
-
-  const isMobile = useMediaQuery('(max-width:600px)')
-  const isTablet = useMediaQuery('(max-width:960px)')
-  const pageSize = isMobile ? 5 : isTablet ? 10 : 20
-
-  const [detailTemuan, setDetailTemuan] = useState([])
-  const [detailDialog, setDetailDialog] = useState(false)
-
-  const [hasilAuditorDialog, setHasilAuditorDialog] = useState(false)
-
-  const fetchData = useCallback(() => {
-    setLoading(true)
-
-    dataTemuanHasilAuditor(paginationModel.page + 1, paginationModel.pageSize, searchQuery)
-      .then(response => {
-        if (response.status) {
-          let data = response.data.map((item, index) => ({
-            no: index + 1 + paginationModel.page * paginationModel.pageSize,
-            ...item
-          }))
-
-          setRows(data)
-          setTotalRows(response.pagination.total)
-        }
-
-        setLoading(false)
+      if (response.status) {
+        setDataLha(response.data)
+      } else {
+        Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      }
+    } catch (error) {
+      setLoading(false)
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
       })
-      .catch(error => {
-        console.error('Error fetching data:', error)
-        setLoading(false)
+    } finally {
+      setLoading(false)
+    }
+  }, [params])
+
+  const fetchFilesData = async lha_id => {
+    if (!lha_id) return
+
+    try {
+      const response = await dataFilesByLhaSpi(lha_id)
+
+      if (response.status) {
+        const responseData = response.data.map((item, index) => ({
+          ...item,
+          no: index + 1
+        }))
+
+        return responseData.filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
+      } else {
+        Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
       })
-  }, [paginationModel.page, paginationModel.pageSize, searchQuery])
+    }
+  }
 
-  const CustomPagination = () => {
-    const apiRef = useGridApiContext()
-    const pageCount = useGridSelector(apiRef, gridPageCountSelector)
-    const page = apiRef.current.state.pagination.paginationModel.page
-    const pageSize = apiRef.current.state.pagination.paginationModel.pageSize
+  const fetchTemuanData = async lha_id => {
+    if (!lha_id) return
 
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-        <GridPagination
-          sx={{
-            flexGrow: 0,
-            '& .MuiTablePagination-displayedRows': { display: 'none' },
-            '& .MuiTablePagination-actions': { display: 'none' }
-          }}
-        />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant='body2'>
-            {`${page * pageSize + 1}–${Math.min((page + 1) * pageSize, totalRows)} of ${totalRows}`}
-          </Typography>
-          <Pagination
-            count={pageCount}
-            page={page + 1}
-            onChange={(event, newPage) => apiRef.current.setPage(newPage - 1)}
-            renderItem={item => <PaginationItem {...item} />}
-          />
-        </Box>
-      </Box>
-    )
+    try {
+      const response = await dataTemuanHasilAuditor(lha_id)
+
+      if (response.status) {
+        const responseData = response.data.map((item, index) => ({
+          ...item,
+          no: index + 1
+        }))
+
+        return responseData.filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
+      } else {
+        Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    }
   }
 
   useEffect(() => {
-    fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchData])
+    if (!dataLha?.id) fetchDetailData()
+
+    if (dataLha?.id) {
+      fetchFilesData(dataLha?.id).then(data => {
+        setRowsFiles(data)
+      })
+    }
+  }, [fetchDetailData, dataLha?.id])
+
+  useEffect(() => {
+    if (dataLha?.id && rowsFiles?.length > 0) {
+      fetchTemuanData(dataLha?.id).then(data => {
+        setRowsTemuan(data)
+      })
+
+      setIsTemuan(true)
+    }
+  }, [dataLha?.id, rowsFiles])
+
+  if (!dataLha) {
+    return null
+  }
 
   const columns = [
-    { field: 'id', headerName: 'ID', hide: true },
-    { field: 'no', headerName: 'No', width: 50 },
-    { field: 'nomor', headerName: 'No. Temuan', width: 100 },
-    { field: 'judul', headerName: 'Judul', flex: 1 },
-    { field: 'divisi', headerName: 'Divisi', flex: 1 },
+    { field: 'id', headerName: 'ID' },
     {
-      field: 'last_tage',
-      headerName: 'Posisi Saat Ini',
+      field: 'no',
+      headerName: 'No',
+      width: 50,
+      headerAlign: 'center',
+      align: 'center'
+    },
+    { field: 'nama', headerName: 'Nama File', flex: 1 },
+    {
+      field: 'url_file',
+      headerName: 'File',
       width: 150,
       renderCell: params => (
-        <Chip label={params.row.stage_name ?? '-'} variant='outlined' color='primary' size='small' />
-      )
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      width: 100,
-      renderCell: params => (
-        <Chip
-          label={params.row.status_name ?? '-'}
-          variant='outlined'
-          color={statusColor[params.row.status]}
+        <Button
+          variant='contained'
+          color='primary'
           size='small'
-        />
+          endIcon={<OpenInNew />}
+          onClick={() => window.open(params.row.url_file, '_blank', 'noopener,noreferrer')}
+        >
+          Lihat File
+        </Button>
       )
     },
     {
       field: 'actions',
       headerName: 'Aksi',
-      width: 150,
+      width: 100,
+      headerAlign: 'center',
+      align: 'center',
       renderCell: params => (
-        <Stack spacing={1}>
-          <Button
-            fullWidth
-            size='small'
-            color='primary'
-            variant='contained'
-            onClick={() => {
-              setHasilAuditorDialog(true)
-              setTemuanId(params.row.id)
-            }}
-          >
-            Hasil Auditor
-          </Button>
-          <Button fullWidth size='small' color='info' variant='contained' onClick={() => handleDetail(params.row.id)}>
-            Detail
-          </Button>
-          <Button
-            fullWidth
-            size='small'
-            color='secondary'
-            variant='contained'
-            endIcon={<History />}
-            onClick={() => {
-              setTemuanId(prev => {
-                const newId = params.row.id
-
-                setTimeout(() => {
-                  handleLogTemuan(newId)
-                }, 1000)
-
-                return newId
-              })
-              setLoading(true)
-            }}
-            disabled={loading}
-          >
-            {loading ? 'Memuat...' : 'Log Temuan'}
-          </Button>
-        </Stack>
+        <Box>
+          <Tooltip title='Hapus File' arrow>
+            <IconButton
+              size='small'
+              color='error'
+              onClick={() => handleDeleteFile(params.row.id)}
+              sx={{ width: 24, height: 24 }}
+            >
+              <Delete fontSize='small' />
+            </IconButton>
+          </Tooltip>
+        </Box>
       )
     }
   ]
 
-  const handleDetail = async id => {
-    const response = await findTemuan(id)
+  const handleDeleteFile = async id => {
+    setLoading(true)
 
-    if (response.status) {
-      setDetailTemuan(response.data)
-      setDetailDialog(true)
-
-      return
-    }
-
-    Swal.fire({
-      title: 'Gagal!',
-      text: response.message || 'Terjadi kesalahan!',
-      icon: 'error'
+    const result = await Swal.fire({
+      title: 'Konfirmasi?',
+      text: `Apakah anda yakin ingin menghapus file ini!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
     })
-  }
 
-  const handleLogTemuan = async id => {
-    if (!id) {
-      Swal.fire({
-        title: 'Gagal!',
-        text: 'ID Temuan belum di set.',
-        icon: 'error'
-      })
-    }
+    if (result.isConfirmed) {
+      try {
+        const res = await deleteFile(id)
 
-    const data = await logTemuan(id)
+        if (!res.status) {
+          throw new Error(res.message)
+        }
 
-    if (data.status && data.data.length > 0) {
-      setListLogTemuan(data.data)
-      setOpenDialogLog(true)
-    } else {
-      Swal.fire({
-        title: 'Gagal!',
-        text: 'Gagal mengambil data.',
-        icon: 'error'
-      })
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          showConfirmButton: false
+        })
+
+        await fetchFilesData(dataLha?.lha_id).then(data => {
+          setRowsFiles(data)
+        })
+
+        setFormFilesData({
+          lha_id: '',
+          nama: '',
+          file: '',
+          direktori: ''
+        })
+      } catch (err) {
+        Swal.fire({
+          title: 'Gagal!',
+          text: err.message || 'Terjadi kesalahan',
+          icon: 'error'
+        })
+      } finally {
+        setLoading(false)
+      }
     }
 
     setLoading(false)
   }
 
-  const handleSelesaiTemuan = async () => {
-    const sendLha = {
-      temuan_id: temuanId,
-      keterangan: formData.keterangan
+  const handleFileSelect = file => {
+    setFormFilesData(prev => ({ ...prev, file }))
+  }
+
+  const handleUpload = async () => {
+    if (!formFilesData.file) {
+      alert('Pilih file terlebih dahulu!')
+
+      return
     }
 
     setLoading(true)
+    const formData = new FormData()
+
+    formData.append('lha_id', dataLha.id)
+    formData.append('nama', formFilesData.nama)
+    formData.append('file', formFilesData.file)
+    formData.append('is_spi', true)
+
+    console.log(formData)
 
     try {
-      let res = await terimaAuditorTemuan(sendLha)
+      const response = await uploadFiles(formData)
 
-      if (res.status) {
-        setHasilAuditorDialog(false)
-
-        await Swal.fire({
+      if (response.status) {
+        Swal.fire({
           title: 'Berhasil!',
-          text: res.message,
-          icon: 'success',
-          showConfirmButton: false,
-          timer: 1000,
-          backdrop: false
+          text: response.message || 'File berhasil diupload',
+          icon: 'success'
         })
 
-        setFormData({
-          temuan_id: '',
-          keterangan: ''
+        await fetchFilesData(dataLha.id).then(data => {
+          setRowsFiles(data)
         })
-        fetchData()
-        setTemuanId(null)
+
+        setFormFilesData({
+          nama: '',
+          file: ''
+        })
+        setOpenDialogFiles(false)
       }
     } catch (error) {
+      console.error('Upload gagal:', error)
       Swal.fire({
         title: 'Gagal!',
         text: error.message || 'Terjadi kesalahan',
@@ -337,183 +363,266 @@ export default function Findings() {
     }
   }
 
-  const handleTolakTemuan = async () => {
-    const sendLha = {
-      temuan_id: temuanId,
-      keterangan: formData.keterangan
-    }
-
-    setLoading(true)
-
+  const handleSubmitHasil = async () => {
     try {
-      let res = await tolakAuditorTemuan(sendLha)
+      const result = await Swal.fire({
+        title: 'Apakah anda yakin ingin menyimpan hasil ini?',
+        text: `Setelah berhasil anda akan dialihkan ke halaman rekomendasi untuk menginputkan rekomendasi terbaru.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Kirim!',
+        cancelButtonText: 'Batal'
+      })
 
-      if (res.status) {
-        setHasilAuditorDialog(false)
+      if (result.isConfirmed) {
+        const res = await inputHasilAuditor(formHasil)
 
-        await Swal.fire({
-          title: 'Berhasil!',
-          text: res.message,
-          icon: 'success',
-          showConfirmButton: false,
-          timer: 1000,
-          backdrop: false
-        })
-
-        setFormData({
-          temuan_id: '',
-          keterangan: ''
-        })
-        fetchData()
-        setTemuanId(null)
+        if (res.status) {
+          await Swal.fire({
+            title: 'Berhasil!',
+            text: res.message,
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1000
+          })
+          router.replace(`/temuan/${formHasil.temuan_id}/rekomendasi`)
+          setOpenDialogHasil(false)
+        }
       }
-    } catch (error) {
-      Swal.fire({
+    } catch (err) {
+      await Swal.fire({
         title: 'Gagal!',
-        text: error.message || 'Terjadi kesalahan',
+        text: err.message || 'Terjadi kesalahan',
         icon: 'error'
       })
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
     <>
-      <Dialog
-        aria-labelledby='detail-temuan'
-        open={detailDialog}
-        onClose={() => {
-          setDetailTemuan([])
-          setDetailDialog(false)
-        }}
-        aria-describedby='detail-temuan'
-        maxWidth={'sm'}
-        fullWidth={true}
-      >
-        <DialogTitle>Detail Temuan</DialogTitle>
-        <DialogContent>
-          <Typography variant='h6' gutterBottom>
-            LHA
-          </Typography>
-          <Typography variant='body1' gutterBottom>
-            {detailTemuan.lha}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Nomor
-          </Typography>
-          <Typography variant='body1' gutterBottom>
-            {detailTemuan.nomor}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Judul
-          </Typography>
-          <Typography variant='body1' gutterBottom>
-            {detailTemuan.judul}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Deskripsi
-          </Typography>
-          <Typography variant='body1' gutterBottom style={{ whiteSpace: 'pre-line' }}>
-            {detailTemuan.deskripsi}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Unit
-          </Typography>
-          <Typography variant='body1' gutterBottom>
-            {detailTemuan.unit}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Divisi
-          </Typography>
-          <Typography variant='body1' gutterBottom>
-            {detailTemuan.divisi}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Departemen
-          </Typography>
-          <Typography variant='body1' gutterBottom>
-            {detailTemuan.departemen}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant='h6' gutterBottom>
-            Status
-          </Typography>
-          <Chip label={detailTemuan.status_name} variant='outlined' size='small' color='primary' />
-        </DialogContent>
-      </Dialog>
-      <TimelineLogDialog open={openDialogLog} onClose={() => setOpenDialogLog(false)} logs={listLogTemuan} />
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader title='Hasil Auditor' />
-            <CardContent>
-              <Grid container spacing={5}>
-                <Grid size={12}>
-                  <Box sx={{ height: 'auto', minHeight: 400 }}>
-                    <DataGrid
-                      rows={rows}
-                      columns={columns}
-                      columnVisibilityModel={{ id: false }}
-                      loading={loading}
-                      paginationMode='server'
-                      rowCount={totalRows}
-                      pagination
-                      paginationModel={paginationModel}
-                      onPaginationModelChange={newModel => setPaginationModel(newModel)}
-                      pageSizeOptions={[5, 10, 20, 50, 100]}
-                      pageSize={pageSize}
-                      getRowHeight={() => 'auto'}
-                      sx={{
-                        [`& .${gridClasses.cell}`]: {
-                          py: 3
-                        }
-                      }}
-                      slots={{
-                        toolbar: () => <CustomToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />,
-                        pagination: CustomPagination
-                      }}
-                    />
-                  </Box>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <Card>
+        <CardHeader
+          title='Detail LHA'
+          action={
+            <>
+              <Button variant='contained' color='secondary' href={`/hasil-auditor`} sx={{ mx: 2 }}>
+                Kembali
+              </Button>
+              <Button variant='contained' color='primary' href={`/lha/${dataLha.id}/detail`}>
+                Lihat Detail LHA
+              </Button>
+            </>
+          }
+        />
+        <CardContent>
+          <Grid2 container spacing={5}>
+            {' '}
+            <Grid2 size={{ xs: 12, md: 5 }}>
+              <Typography variant='h6' gutterBottom>
+                LHA
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {dataLha.judul ?? '-'}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Nomor
+              </Typography>
+              <Typography variant='body1' gutterBottom>
+                {dataLha.nomor ?? '-'}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant='h6' gutterBottom>
+                Uraian
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <p style={{ whiteSpace: 'pre-line' }}>{dataLha?.deskripsi ?? '-'}</p>
+              </Box>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 7 }}>
+              <Box sx={{ height: 'auto', minHeight: 400 }}>
+                <Typography variant='h6' gutterBottom>
+                  Daftar File LHA
+                </Typography>
+                <Button variant='contained' color='primary' onClick={() => setOpenDialogFiles(true)}>
+                  Tambah File
+                </Button>
+                <Box sx={{ mt: 2 }}>
+                  <Divider sx={{ my: 2 }} />
+                </Box>
+                <DataGrid
+                  loading={loading}
+                  columnVisibilityModel={{ id: false }}
+                  rows={rowsFiles}
+                  columns={columns}
+                  pageSize={5}
+                  rowsPerPageOptions={[5]}
+                  getRowHeight={() => 'auto'}
+                  sx={{
+                    [`& .${gridClasses.cell}`]: {
+                      py: 3
+                    }
+                  }}
+                />
+              </Box>
+            </Grid2>
+            <Grid2 size={{ xs: 12 }}>
+              <Dialog
+                fullScreen={fullScreen}
+                aria-labelledby='responsive-dialog-title'
+                open={openDialogFiles}
+                onClose={() => {
+                  setFormFilesData({
+                    nama: '',
+                    file: ''
+                  })
+                  setOpenDialogFiles(false)
+                }}
+                aria-describedby='dialog-description'
+                maxWidth={'sm'}
+                fullWidth={true}
+              >
+                <DialogTitle>Form Management File</DialogTitle>
+                <DialogContent>
+                  <TextField
+                    fullWidth
+                    label='Nama File'
+                    variant='outlined'
+                    margin='normal'
+                    value={formFilesData.nama}
+                    onChange={e => setFormFilesData({ ...formFilesData, nama: e.target.value })}
+                  />
+                  <FileUploader onFileSelect={handleFileSelect} />
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    variant='contained'
+                    color='secondary'
+                    onClick={() => {
+                      setFormFilesData({
+                        nama: '',
+                        file: ''
+                      })
+                      setOpenDialogFiles(false)
+                    }}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    type='submit'
+                    variant='contained'
+                    color='primary'
+                    onClick={handleUpload}
+                    disabled={loading}
+                    loading={loading}
+                  >
+                    {loading ? 'Uploading...' : 'Upload'}
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Grid2>
+          </Grid2>
+        </CardContent>
+      </Card>
+      {isTemuan && (
+        <Card sx={{ mt: 4 }}>
+          <CardHeader title='List Temuan' />
+          <CardContent>
+            <Box sx={{ height: 'auto', minHeight: 400 }}>
+              <DataGrid
+                loading={loading}
+                columnVisibilityModel={{ id: false }}
+                rows={rowsTemuan}
+                columns={[
+                  { field: 'id', headerName: 'ID', hide: true },
+                  { field: 'no', headerName: 'No', width: 10 },
+                  { field: 'judul', headerName: 'Judul', width: 200 },
+                  {
+                    field: 'rekomendasi',
+                    headerName: 'Rekomendasi',
+                    headerAlign: 'center',
+                    flex: 1,
+                    renderCell: params => (
+                      <>
+                        <ul style={{ margin: 0, padding: 0 }}>
+                          {params.row.rekomendasi.map((item, index) => (
+                            <li key={index} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                              <span>
+                                {index + 1}. {item?.deskripsi}
+                              </span>
+                              <Chip variant='outlined' label={item.status_name} />
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )
+                  },
+                  {
+                    field: 'aksi',
+                    headerName: 'Aksi',
+                    headerAlign: 'center',
+                    width: 200,
+                    align: 'center',
+                    renderCell: params => (
+                      <>
+                        <Button
+                          size='small'
+                          color='info'
+                          onClick={() => {
+                            setOpenDialogHasil(true)
+                            setFormHasil({ ...formHasil, temuan_id: params.row.id })
+                          }}
+                          fullWidth
+                          variant='contained'
+                        >
+                          Hasil
+                        </Button>
+                      </>
+                    )
+                  }
+                ]}
+                pageSize={5}
+                rowsPerPageOptions={[5]}
+                getRowHeight={() => 'auto'}
+                sx={{
+                  [`& .${gridClasses.cell}`]: {
+                    py: 3
+                  }
+                }}
+              />
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog
-        aria-labelledby='dialog-hasil-auditor'
-        open={hasilAuditorDialog}
+        fullScreen={fullScreen}
+        aria-labelledby='responsive-dialog-title'
+        open={openDialogHasil}
         onClose={() => {
-          setFormData({
+          setFormHasil({
+            temuan_id: '',
             keterangan: '',
-            temuan_id: ''
+            files: []
           })
+          setOpenDialogHasil(false)
         }}
-        aria-describedby='dialog-hasil-auditor-description'
-        fullWidth={true}
+        aria-describedby='dialog-description'
         maxWidth={'sm'}
+        fullWidth={true}
       >
-        <DialogTitle>Konfirmasi</DialogTitle>
+        <DialogTitle>Form Hasil SPI</DialogTitle>
         <DialogContent>
-          <Typography variant='h6' sx={{ my: 2 }}>
-            Masukkan keterangan auditor untuk temuan ini?
-          </Typography>
           <CustomTextField
             fullWidth
             rows={4}
             multiline
             label='Keterangan'
             placeholder='Masukkan keterangan...'
-            onChange={e => setFormData({ ...formData, keterangan: e.target.value })}
-            value={formData.keterangan}
+            onChange={e => setFormHasil({ ...formHasil, keterangan: e.target.value })}
+            value={formHasil.keterangan}
             sx={{ '& .MuiInputBase-root.MuiFilledInput-root': { alignItems: 'baseline' } }}
             slotProps={{
               input: {
@@ -525,95 +634,52 @@ export default function Findings() {
               }
             }}
           />
+          <FormControl fullWidth margin='normal'>
+            <InputLabel id='file-dukung-label'>File Dukung</InputLabel>
+            <Select
+              labelId='file-dukung-label'
+              multiple
+              value={formHasil.files}
+              onChange={e => setFormHasil({ ...formHasil, files: e.target.value })}
+              label='File Dukung'
+            >
+              {rowsFiles?.map(file => (
+                <MenuItem key={file.id} value={file.id}>
+                  {file.nama}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button variant='contained' color='secondary' onClick={() => setHasilAuditorDialog(false)}>
+          <Button
+            variant='contained'
+            color='secondary'
+            onClick={() => {
+              setFormHasil({
+                temuan_id: '',
+                keterangan: '',
+                files: []
+              })
+              setOpenDialogHasil(false)
+            }}
+          >
             Close
           </Button>
           <Button
             type='submit'
             variant='contained'
-            color='error'
-            onClick={handleTolakTemuan}
-            disabled={loading}
-            loading={loading}
-          >
-            Ditolak
-          </Button>
-          <Button
-            type='submit'
-            variant='contained'
             color='success'
-            onClick={handleSelesaiTemuan}
-            disabled={loading}
-            loading={loading}
+            onClick={() => {
+              handleSubmitHasil()
+            }}
+            disabled={loadingHasil}
+            loading={loadingHasil}
           >
-            Selesai
+            {loadingHasil ? 'Menyimpan...' : 'Simpan'}
           </Button>
         </DialogActions>
       </Dialog>
     </>
-  )
-}
-
-const getColor = action => {
-  switch (action) {
-    case 'submit':
-      return 'warning'
-    case 'diterima':
-      return 'success'
-    case 'ditolak':
-      return 'error'
-    case 'draf':
-      return 'secondary'
-    default:
-      return 'primary'
-  }
-}
-
-const TimelineLogDialog = ({ open, onClose, logs }) => {
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
-      <DialogTitle>Log Temuan</DialogTitle>
-      <DialogContent>
-        {logs?.length > 0 ? (
-          <Box sx={{ pl: 2 }}>
-            <Timeline
-              sx={{
-                [`& .${timelineItemClasses.root}:before`]: {
-                  flex: 0,
-                  padding: 0
-                }
-              }}
-            >
-              {logs.map((log, index) => (
-                <TimelineItem key={index}>
-                  <TimelineSeparator>
-                    <TimelineDot color={getColor(log.action)} />
-                    {index !== logs.length - 1 && <TimelineConnector />}
-                  </TimelineSeparator>
-                  <TimelineContent>
-                    <Typography variant='body1' fontWeight='bold'>
-                      {log.stage_before ?? log.nama}
-                    </Typography>
-                    <Typography variant='body2' color='textSecondary'>
-                      {new Date(log.created_at).toLocaleString()}
-                    </Typography>
-                    <Typography variant='body2' color='textPrimary'>
-                      {log.keterangan}
-                    </Typography>
-                    <Typography variant='body2' color='textSecondary' fontStyle='italic'>
-                      Action: {log.action}
-                    </Typography>
-                  </TimelineContent>
-                </TimelineItem>
-              ))}
-            </Timeline>
-          </Box>
-        ) : (
-          <p>Tidak ada log tersedia.</p>
-        )}
-      </DialogContent>
-    </Dialog>
   )
 }

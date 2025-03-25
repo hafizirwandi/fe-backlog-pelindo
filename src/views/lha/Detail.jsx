@@ -211,7 +211,7 @@ export default function DetailLha() {
           status: data.status
         })
       } else {
-        router.replace('/not-found')
+        router.replace('/lha')
       }
     })
   }, [id, router])
@@ -251,7 +251,9 @@ export default function DetailLha() {
       }
 
       if (user?.permissions?.includes('update status-lha-pic')) {
-        res = await acceptTemuan(sendLha)
+        res = await submitTemuan(sendLha)
+
+        // res = await acceptTemuan(sendLha)
       }
 
       if (user?.permissions?.includes('update status-lha-penanggungjawab')) {
@@ -393,6 +395,8 @@ export default function DetailLha() {
   }
 
   const capitalizeFirstLetter = text => {
+    return text
+
     return text.charAt(0).toUpperCase() + text.slice(1)
   }
 
@@ -439,6 +443,7 @@ export default function DetailLha() {
     }
 
     setLoading(false)
+    setTemuanId(null)
   }
 
   const handleSelesaiInternal = async () => {
@@ -669,7 +674,17 @@ export default function DetailLha() {
                             color = 'error'
                           }
 
-                          return <Chip label={capitalizeFirstLetter(row.stage.action)} color={color} size='small' />
+                          if (row.stage.action === 'submit') {
+                            color = 'warning'
+                          }
+
+                          if (row.stage.action === 'draf') {
+                            color = 'secondary'
+                          }
+
+                          return (
+                            <Chip label={capitalizeFirstLetter(row.stage.action_name)} color={color} size='small' />
+                          )
                         })()}
                       </Box>
                     </AccordionSummary>
@@ -771,10 +786,22 @@ export default function DetailLha() {
                                 >
                                   Tindaklanjut
                                 </Button>
+                                <Button
+                                  variant='contained'
+                                  fullWidth
+                                  color='primary'
+                                  endIcon={<Send />}
+                                  onClick={() => {
+                                    setOpenDialog(true)
+                                    setTemuanId(row.id)
+                                  }}
+                                >
+                                  Kirim
+                                </Button>
                               </>
                             )}
 
-                          {row.last_stage > 1 && checkId(row.last_stage) && (
+                          {row.last_stage > 1 && row.last_stage !== 3 && checkId(row.last_stage) && (
                             <>
                               <Button
                                 variant='contained'
@@ -832,7 +859,7 @@ export default function DetailLha() {
                             </>
                           )}
 
-                          {row.status >= 2 && (
+                          {row.last_stage === 5 && row.status >= 1 && (
                             <Button
                               variant='contained'
                               fullWidth
@@ -851,6 +878,7 @@ export default function DetailLha() {
                                 })
                               }}
                               disabled={loading}
+                              sx={{ my: 1 }}
                             >
                               {loading ? 'Mencetak...' : 'Cetak'}
                             </Button>
@@ -1119,7 +1147,7 @@ const TimelineLogDialog = ({ open, onClose, logs }) => {
                   </TimelineSeparator>
                   <TimelineContent>
                     <Typography variant='body1' fontWeight='bold'>
-                      {log.stage_before ?? log.nama}
+                      {log.action_name}
                     </Typography>
                     <Typography variant='body2' color='textSecondary'>
                       {new Date(log.created_at).toLocaleString()}
@@ -1128,7 +1156,7 @@ const TimelineLogDialog = ({ open, onClose, logs }) => {
                       {log.keterangan}
                     </Typography>
                     <Typography variant='body2' color='textSecondary' fontStyle='italic'>
-                      Action: {log.action}
+                      User: {log.user}
                     </Typography>
                   </TimelineContent>
                 </TimelineItem>

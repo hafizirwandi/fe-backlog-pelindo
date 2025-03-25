@@ -24,6 +24,8 @@ export default function LhaSelect({ value, onSelect, disabled }) {
           (item, index, self) => index === self.findIndex(t => t.id === item.id)
         )
 
+        console.log('set options')
+
         setOptions(uniqueOptions)
       }
     } catch (error) {
@@ -47,15 +49,18 @@ export default function LhaSelect({ value, onSelect, disabled }) {
     const loadData = async () => {
       if (!value) return
       await fetchData('')
+      console.log('fetch data')
     }
 
     loadData()
   }, [value])
 
   React.useEffect(() => {
-    if (!value || options.length === 0) return // Pastikan ada value dan options tidak kosong
+    if (!value || options.length === 0) return
 
-    const foundOption = options.find(option => option.id === value) || null
+    const foundOption = options.find(option => option.id == value) || null
+
+    console.log('set selected value', value, foundOption)
 
     setSelectedValue(foundOption)
   }, [value, options])
@@ -69,7 +74,7 @@ export default function LhaSelect({ value, onSelect, disabled }) {
       onClose={() => setOpen(false)}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
       isOptionEqualToValue={(option, value) => option.id === value.id}
-      getOptionLabel={option => `${option.no_lha} - ${option.judul}`}
+      getOptionLabel={option => `${option.judul}`}
       options={options}
       loading={loading}
       onChange={(_, newValue) => {
@@ -81,7 +86,7 @@ export default function LhaSelect({ value, onSelect, disabled }) {
       }}
       renderOption={(props, option) => (
         <li {...props} key={option.id}>
-          {option.no_lha} - {option.judul}
+          {option.judul}
         </li>
       )}
       renderInput={params => (

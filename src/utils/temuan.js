@@ -698,15 +698,11 @@ export const selesaiInternalTemuan = async dataLha => {
   }
 }
 
-export const dataTemuanHasilAuditor = async (page, pageSize, searchQuery) => {
+export const dataTemuanHasilAuditor = async lha_id => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/temuan/hasil-auditor?page=${page}&page_size=${pageSize}`
-
-    if (searchQuery != '') {
-      urlRequest += `&keyword=${searchQuery}`
-    }
+    let urlRequest = `${url}v1/temuan/hasil-auditor/${lha_id}`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
@@ -737,11 +733,7 @@ export const dataTemuanHasilAuditor = async (page, pageSize, searchQuery) => {
 
     if (!response.ok) throw new Error(data.message || 'Gagal mengambil data!')
 
-    return {
-      status: true,
-      data: data.data,
-      pagination: data.pagination
-    }
+    return data
   } catch (error) {
     return {
       status: false,
@@ -827,6 +819,55 @@ export const terimaAuditorTemuan = async dataLha => {
 
       if (refreshSuccess) {
         return terimaAuditorTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const inputHasilAuditor = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/input-hasil-auditor`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return tolakAuditorTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return tolakAuditorTemuan(dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }

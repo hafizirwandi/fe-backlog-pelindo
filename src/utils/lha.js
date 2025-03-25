@@ -114,7 +114,7 @@ export const detailsLha = async id => {
 export const findLha = async id => {
   const token = Cookies.get('token')
 
-  let urlRequest = `${url}v1/lha/${id}`
+  let urlRequest = `${url}v1/lha/${id}/show`
 
   try {
     if (!token) {
@@ -152,7 +152,7 @@ export const updateLha = async (id, dataLha) => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/lha/${id}`
+    let urlRequest = `${url}v1/lha/${id}/update`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
@@ -201,7 +201,7 @@ export const deleteLha = async id => {
   try {
     const token = Cookies.get('token')
 
-    let urlRequest = `${url}v1/lha/${id}`
+    let urlRequest = `${url}v1/lha/${id}/delete`
 
     if (!token) {
       const refreshSuccess = await refreshToken()
@@ -529,6 +529,49 @@ export const sendLhaAuditor = async dataLha => {
       status: true,
       message: data.message
     }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const dataLhaSpi = async (page, pageSize, searchQuery, filters) => {
+  try {
+    const token = Cookies.get('token')
+
+    const queryParams = new URLSearchParams()
+
+    // Tambahkan parameter hanya jika tidak kosong
+    queryParams.append('page', page)
+    queryParams.append('page_size', pageSize)
+
+    if (searchQuery.trim() !== '') {
+      queryParams.append('keyword', searchQuery)
+    }
+
+    let urlRequest = `${url}v1/lha/hasil-spi?${queryParams.toString()}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return dataLhaSpi()
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    const data = await response.json()
+
+    return data
   } catch (error) {
     return {
       status: false,

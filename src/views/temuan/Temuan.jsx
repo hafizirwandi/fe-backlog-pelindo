@@ -120,6 +120,10 @@ export default function Findings() {
     lha_id => {
       setLoading(true)
 
+      if (!lha_id) {
+        lha_id = paramLha ?? formData.lha_id
+      }
+
       if (lha_id) {
         dataTemuanByLha(paginationModel.page + 1, paginationModel.pageSize, searchQuery, lha_id)
           .then(response => {
@@ -160,7 +164,7 @@ export default function Findings() {
           })
       }
     },
-    [paginationModel.page, paginationModel.pageSize, searchQuery]
+    [paginationModel.page, paginationModel.pageSize, searchQuery, paramLha, formData.lha_id]
   )
 
   const CustomPagination = () => {
@@ -296,13 +300,16 @@ export default function Findings() {
   }
 
   const handleLha = value => {
-    let id = value ? value.id : ''
+    let id = value ? value.id : formData.lha_id
+
+    console.log(id)
 
     setFormData(prev => ({ ...prev, lha_id: id }))
 
     if (id === '') {
       setFormData({
         id: '',
+        lha_id: paramLha ?? formData.lha_id,
         unit: '',
         divisi: '',
         departemen: '',
@@ -359,11 +366,11 @@ export default function Findings() {
           timer: 1000
         })
 
-        fetchData()
+        fetchData(formData.lha_id)
 
         setFormData({
           id: '',
-          lha_id: '',
+          lha_id: paramLha ?? formData.lha_id,
           unit: '',
           divisi: '',
           departemen: '',
@@ -441,11 +448,11 @@ export default function Findings() {
           timer: 1000
         })
 
-        fetchData()
+        fetchData(formData.lha_id)
 
         setFormData({
           id: '',
-          lha_id: '',
+          lha_id: paramLha ?? formData.lha_id,
           unit: '',
           divisi: '',
           departemen: '',
@@ -500,7 +507,7 @@ export default function Findings() {
 
         setFormData({
           id: '',
-          lha_id: formData.lha_id,
+          lha_id: paramLha ?? formData.lha_id,
           unit: '',
           divisi: '',
           departemen: '',
@@ -618,6 +625,9 @@ export default function Findings() {
           onClose={() => {
             setFormData({
               id: '',
+              lha_id: paramLha ?? formData.lha_id,
+              unit: '',
+              divisi: '',
               judul: '',
               nomor: '',
               tanggal: new Date().toISOString().split('T')[0],
@@ -632,7 +642,7 @@ export default function Findings() {
           <DialogTitle>Form Temuan</DialogTitle>
           <DialogContent>
             <FormControl fullWidth margin='normal'>
-              <LHASelect value={formData.lha_id} onSelect={handleLha} />
+              <LHASelect value={paramLha ?? formData.lha_id} onSelect={handleLha} />
             </FormControl>
             <TextField
               fullWidth
@@ -678,15 +688,6 @@ export default function Findings() {
                 }
               }}
             />
-            {/* <Typography variant='body2' sx={{ mt: 2 }}>
-                        Deskripsi
-                      </Typography>
-                      <Box>
-                        <QuillEditor
-                          value={formData.deskripsi}
-                          onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
-                        />
-                      </Box> */}
           </DialogContent>
           <DialogActions>
             <Button
@@ -696,7 +697,7 @@ export default function Findings() {
               onClick={() => {
                 setFormData({
                   id: '',
-                  lha_id: formData.lha_id,
+                  lha_id: paramLha ?? formData.lha_id,
                   unit: '',
                   divisi: '',
                   departemen: '',

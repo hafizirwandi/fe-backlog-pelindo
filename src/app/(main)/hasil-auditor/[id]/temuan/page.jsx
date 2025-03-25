@@ -1,5 +1,5 @@
 // Component Imports
-import Lha from '@views/hasil-auditor/Lha'
+import Temuan from '@views/hasil-auditor/Temuan'
 
 // Server Action Imports
 import { getServerMode } from '@core/utils/serverHelpers'
@@ -13,7 +13,7 @@ const TemuanPage = async () => {
   // Vars
   const mode = await getServerMode()
 
-  return <Lha mode={mode} />
+  return <Temuan mode={mode} />
 }
 
 export default TemuanPage
