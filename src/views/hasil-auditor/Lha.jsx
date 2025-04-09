@@ -42,10 +42,6 @@ import { createLha, dataLha, dataLhaSpi, deleteLha, findLha, updateLha } from '@
 import { useAuth } from '@/context/AuthContext'
 import CustomTextField from '@/@core/components/mui/TextField'
 
-const QuillEditor = dynamic(() => import('@components/QuillEditor'), {
-  ssr: false
-})
-
 const CustomToolbar = ({ searchQuery, setSearchQuery }) => {
   const [localSearch, setLocalSearch] = useState(searchQuery)
 

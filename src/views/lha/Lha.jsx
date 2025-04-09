@@ -42,10 +42,6 @@ import { createLha, dataLha, deleteLha, findLha, updateLha } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
 import CustomTextField from '@/@core/components/mui/TextField'
 
-const QuillEditor = dynamic(() => import('@components/QuillEditor'), {
-  ssr: false
-})
-
 const CustomToolbar = ({ searchQuery, setSearchQuery }) => {
   const [localSearch, setLocalSearch] = useState(searchQuery)
 
@@ -668,18 +664,6 @@ export default function Lha() {
                   }
                 }}
               />
-              {/* Deskripsi
-              <Typography variant='body2' sx={{ mt: 2 }}>
-                Deskripsi
-              </Typography>
-              <Box>
-                <QuillEditor
-                  value={formData.deskripsi}
-                  onChange={content => {
-                    setFormData(prev => ({ ...prev, deskripsi: content }))
-                  }}
-                />
-              </Box> */}
             </Stack>
           </DialogContent>
           <DialogActions>

@@ -51,7 +51,6 @@ import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem'
 
 import { detailsLha, findLha, rejectLha, sendLhaAuditor, sendLhaPic, sendLhaPj, sendLhaSpv } from '@/utils/lha'
 import { useAuth } from '@/context/AuthContext'
-import QuillEditor from '@/components/QuillEditor'
 import CustomTextField from '@/@core/components/mui/TextField'
 import {
   acceptTemuan,

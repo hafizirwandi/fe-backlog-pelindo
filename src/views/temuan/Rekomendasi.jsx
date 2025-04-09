@@ -39,7 +39,6 @@ import { DataGrid, gridClasses } from '@mui/x-data-grid'
 
 import { findTemuan } from '@/utils/temuan'
 
-// import QuillEditor from '@/components/QuillEditor'
 import {
   createRekomendasi,
   dataRekomendasi,
@@ -585,15 +584,6 @@ export default function DetailTemuan() {
                         }
                       }}
                     />
-                    {/* <Typography variant='body2' sx={{ mt: 2 }}>
-                    Rekomendasi
-                  </Typography>
-                  <Box>
-                    <QuillEditor
-                      value={formData.deskripsi}
-                      onChange={content => setFormData(prev => ({ ...prev, deskripsi: content }))}
-                    />
-                  </Box> */}
                     <FormControl fullWidth margin='normal'>
                       <InputLabel>Status</InputLabel>
                       <Select

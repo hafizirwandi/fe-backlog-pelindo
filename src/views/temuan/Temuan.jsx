@@ -38,7 +38,6 @@ import LHASelect from '@/components/LhaSelect'
 import { createTemuan, dataTemuan, dataTemuanByLha, deleteTemuan, findTemuan, updateTemuan } from '@/utils/temuan'
 import UnitSelect from '@/components/UnitSelect'
 
-// import QuillEditor from '@/components/QuillEditor'
 import DivisiSelect from '@/components/DivisiSelect'
 import DepartemenSelect from '@/components/DepartemenSelect'
 import { useAuth } from '@/context/AuthContext'
