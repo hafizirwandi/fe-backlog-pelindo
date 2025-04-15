@@ -14,11 +14,16 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Stack
+  Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material'
 import { Checklist, AssignmentTurnedIn, BugReport, ReportProblem, Info } from '@mui/icons-material'
 
 import { dashboardSummary, logStage } from '@/utils/statistik'
+import LhaSelect from '@/components/LhaSelect'
 
 const activityLogs = [
   { message: 'Menambahkan temuan baru', user: 'Budi', timestamp: '2025-04-08 10:32' },
@@ -31,53 +36,83 @@ export default function AuditDashboard() {
   const [progress, setProgress] = useState(0)
   const [activity, setActivity] = useState([])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await dashboardSummary()
+  const fetchData = async lha_id => {
+    let data = []
 
-      if (data.status) {
-        const dataStats = data.data
-
-        setStats([
-          { icon: <Checklist />, label: 'Total LHA', value: dataStats.total_lha, color: '#42a5f5' },
-          { icon: <AssignmentTurnedIn />, label: 'Temuan Selesai', value: dataStats.temuan_selesai, color: '#66bb6a' },
-          { icon: <BugReport />, label: 'Temuan Aktif', value: dataStats.temuan_aktif, color: '#ef5350' },
-          {
-            icon: <ReportProblem />,
-            label: 'Menunggu Auditor',
-            value: dataStats.temuan_selesai_internal,
-            color: '#ffa726'
-          }
-        ])
-
-        const progressVal = (dataStats.temuan_selesai / dataStats.total_temuan) * 100
-
-        setProgress(progressVal)
-      }
+    if (lha_id) {
+      data = await dashboardSummary(lha_id)
+    } else {
+      data = await dashboardSummary()
     }
 
+    if (data.status) {
+      const dataStats = data.data
+
+      setStats([
+        { icon: <Checklist />, label: 'Total LHA', value: dataStats.total_lha, color: '#42a5f5' },
+        { icon: <AssignmentTurnedIn />, label: 'Temuan Selesai', value: dataStats.temuan_selesai, color: '#66bb6a' },
+        { icon: <BugReport />, label: 'Temuan Aktif', value: dataStats.temuan_aktif, color: '#ef5350' },
+        {
+          icon: <ReportProblem />,
+          label: 'Menunggu Auditor',
+          value: dataStats.temuan_selesai_internal,
+          color: '#ffa726'
+        }
+      ])
+      let progressVal = 0
+
+      if (dataStats.total_temuan !== 0) {
+        progressVal = (dataStats.temuan_selesai / dataStats.total_temuan) * 100
+      }
+
+      setProgress(progressVal)
+    }
+  }
+
+  useEffect(() => {
     fetchData()
   }, [])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await logStage()
+  const fetchDataActivity = async lha_id => {
+    let data = []
 
-      if (data.status) {
-        const dataActivity = data.data
-
-        setActivity(dataActivity)
-      }
+    if (lha_id) {
+      data = await logStage(lha_id)
+    } else {
+      data = await logStage()
     }
 
-    fetchData()
+    if (data.status) {
+      const dataActivity = data.data
+
+      setActivity(dataActivity)
+    }
+  }
+
+  useEffect(() => {
+    fetchDataActivity()
   }, [])
+
+  const [selectedLHA, setSelectedLHA] = useState('')
+
+  const handleLha = value => {
+    let id = value ? value.id : null
+
+    setSelectedLHA(id)
+
+    fetchData(id)
+    fetchDataActivity(id)
+  }
 
   return (
     <Box p={4}>
       <Typography variant='h4' gutterBottom fontWeight='bold'>
         Dashboard
       </Typography>
+
+      <FormControl fullWidth sx={{ mb: 4 }}>
+        <LhaSelect value={selectedLHA} onSelect={handleLha} />
+      </FormControl>
 
       <Grid container spacing={3} mb={4}>
         {stats?.map((stat, index) => (

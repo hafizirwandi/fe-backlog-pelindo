@@ -52,7 +52,7 @@ import {
   findTindaklanjut,
   updateTindaklanjut
 } from '@/utils/tindaklanjut'
-import { dataTemuanHasilAuditor, findTemuan, inputHasilAuditor } from '@/utils/temuan'
+import { closingTemuan, dataTemuanHasilAuditor, findTemuan, inputHasilAuditor } from '@/utils/temuan'
 import { findLha } from '@/utils/lha'
 
 dayjs.locale('id')
@@ -73,9 +73,11 @@ export default function Temuan() {
   const params = useParams()
   const router = useRouter()
   const [loadingHasil, setLoadingHasil] = useState(false)
+  const [loadingClosing, setLoadingClosing] = useState(false)
 
   const [openDialogFiles, setOpenDialogFiles] = useState(false)
   const [openDialogHasil, setOpenDialogHasil] = useState(false)
+  const [openDialogClosing, setOpenDialogClosing] = useState(false)
   const [dataLha, setDataLha] = useState(null)
 
   const [rowsTemuan, setRowsTemuan] = useState()
@@ -84,6 +86,12 @@ export default function Temuan() {
     temuan_id: '',
     keterangan: '',
     files: []
+  })
+
+  const [formClosing, setFormClosing] = useState({
+    temuan_id: '',
+    keterangan: '',
+    file: ''
   })
 
   const [formFilesData, setFormFilesData] = useState({
@@ -217,7 +225,7 @@ export default function Temuan() {
       headerAlign: 'center',
       align: 'center'
     },
-    { field: 'nama', headerName: 'Nama File', flex: 1 },
+    { field: 'nama', headerName: 'Nama Dokumen', flex: 1 },
     {
       field: 'url_file',
       headerName: 'File',
@@ -400,6 +408,44 @@ export default function Temuan() {
     }
   }
 
+  const handleSubmitClosing = async () => {
+    try {
+      const result = await Swal.fire({
+        title: 'Apakah anda yakin ingin?',
+        text: `Temuan yang di closing tidak dapat diubah atau dibuka kembali.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Kirim!',
+        cancelButtonText: 'Batal'
+      })
+
+      if (result.isConfirmed) {
+        const res = await closingTemuan(formClosing)
+
+        if (res.status) {
+          await Swal.fire({
+            title: 'Berhasil!',
+            text: res.message,
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1000
+          })
+          router.replace(`/hasil-auditor/${params.id}/temuan`)
+
+          setOpenDialogClosing(false)
+        }
+      }
+    } catch (err) {
+      await Swal.fire({
+        title: 'Gagal!',
+        text: err.message || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    }
+  }
+
   return (
     <>
       <Card>
@@ -488,7 +534,7 @@ export default function Temuan() {
                 <DialogContent>
                   <TextField
                     fullWidth
-                    label='Nama File'
+                    label='Nama Dokumen'
                     variant='outlined'
                     margin='normal'
                     value={formFilesData.nama}
@@ -565,22 +611,42 @@ export default function Temuan() {
                     headerAlign: 'center',
                     width: 200,
                     align: 'center',
-                    renderCell: params => (
-                      <>
-                        <Button
-                          size='small'
-                          color='info'
-                          onClick={() => {
-                            setOpenDialogHasil(true)
-                            setFormHasil({ ...formHasil, temuan_id: params.row.id })
-                          }}
-                          fullWidth
-                          variant='contained'
-                        >
-                          Hasil
-                        </Button>
-                      </>
-                    )
+                    renderCell: params => {
+                      if (!params.row.closing) {
+                        return (
+                          <>
+                            <Button
+                              size='small'
+                              color='warning'
+                              onClick={() => {
+                                setOpenDialogHasil(true)
+                                setFormHasil(prev => ({ ...prev, temuan_id: params.row.id }))
+                              }}
+                              fullWidth
+                              variant='contained'
+                            >
+                              Hasil
+                            </Button>
+
+                            <Button
+                              size='small'
+                              color='info'
+                              onClick={() => {
+                                setOpenDialogClosing(true)
+                                setFormClosing(prev => ({ ...prev, temuan_id: params.row.id }))
+                              }}
+                              fullWidth
+                              variant='contained'
+                              sx={{ my: 1 }}
+                            >
+                              Closing
+                            </Button>
+                          </>
+                        )
+                      }
+
+                      return null
+                    }
                   }
                 ]}
                 pageSize={5}
@@ -677,6 +743,90 @@ export default function Temuan() {
             loading={loadingHasil}
           >
             {loadingHasil ? 'Menyimpan...' : 'Simpan'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Closing Temuan */}
+      <Dialog
+        fullScreen={fullScreen}
+        aria-labelledby='responsive-dialog-title'
+        open={openDialogClosing}
+        onClose={() => {
+          setFormClosing({
+            temuan_id: '',
+            keterangan: '',
+            file: ''
+          })
+          setOpenDialogClosing(false)
+        }}
+        aria-describedby='dialog-description'
+        maxWidth={'sm'}
+        fullWidth={true}
+      >
+        <DialogTitle>Form Closing Temuan</DialogTitle>
+        <DialogContent>
+          <CustomTextField
+            fullWidth
+            rows={4}
+            multiline
+            label='Keterangan'
+            placeholder='Masukkan keterangan...'
+            onChange={e => setFormClosing({ ...formClosing, keterangan: e.target.value })}
+            value={formClosing.keterangan}
+            sx={{ '& .MuiInputBase-root.MuiFilledInput-root': { alignItems: 'baseline' } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <i className='tabler-message' />
+                  </InputAdornment>
+                )
+              }
+            }}
+          />
+          <FormControl fullWidth margin='normal'>
+            <InputLabel id='file-dukung-label'>Berita Acara</InputLabel>
+            <Select
+              labelId='file-dukung-label'
+              value={formClosing.file}
+              onChange={e => setFormClosing({ ...formClosing, file: e.target.value })}
+              label='File Dukung'
+            >
+              {rowsFiles?.map(file => (
+                <MenuItem key={file.id} value={file.id}>
+                  {file.nama}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant='contained'
+            color='secondary'
+            onClick={() => {
+              setFormClosing({
+                temuan_id: '',
+                keterangan: '',
+                file: ''
+              })
+              setOpenDialogClosing(false)
+            }}
+          >
+            Close
+          </Button>
+          <Button
+            type='submit'
+            variant='contained'
+            color='success'
+            onClick={() => {
+              handleSubmitClosing()
+            }}
+            disabled={loadingClosing}
+            loading={loadingClosing}
+          >
+            {loadingClosing ? 'Menyimpan...' : 'Simpan'}
           </Button>
         </DialogActions>
       </Dialog>

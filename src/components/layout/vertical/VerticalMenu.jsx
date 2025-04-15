@@ -149,7 +149,7 @@ const VerticalMenu = ({ scrollMenu }) => {
             href='/hasil-auditor'
             icon={<i className='tabler-clipboard-text' />}
           >
-            Hasil Auditor
+            Feedback Auditor
           </MenuItem>
         )}
         {user?.permissions?.includes('read report') && (

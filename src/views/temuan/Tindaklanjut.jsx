@@ -212,7 +212,7 @@ export default function Tindaklanjut() {
       headerAlign: 'center',
       align: 'center'
     },
-    { field: 'nama', headerName: 'Nama File', flex: 1 },
+    { field: 'nama', headerName: 'Nama Dokumen', flex: 1 },
     {
       field: 'url_file',
       headerName: 'File',
@@ -642,7 +642,7 @@ export default function Tindaklanjut() {
                 <DialogContent>
                   <TextField
                     fullWidth
-                    label='Nama File'
+                    label='Nama Dokumen'
                     variant='outlined'
                     margin='normal'
                     value={formFilesData.nama}

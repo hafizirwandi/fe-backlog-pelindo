@@ -851,7 +851,7 @@ export const inputHasilAuditor = async dataLha => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return tolakAuditorTemuan(dataLha)
+        return inputHasilAuditor(dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }
@@ -867,7 +867,105 @@ export const inputHasilAuditor = async dataLha => {
       const refreshSuccess = await refreshToken()
 
       if (refreshSuccess) {
-        return tolakAuditorTemuan(dataLha)
+        return inputHasilAuditor(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const closingTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/closing-temuan`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return closingTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return closingTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) throw new Error(data.message || 'Gagal update data!')
+
+    return {
+      status: true,
+      message: data.message
+    }
+  } catch (error) {
+    return {
+      status: false,
+      data: [],
+      message: error
+    }
+  }
+}
+
+export const selesaiClosingTemuan = async dataLha => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/temuan/selesai-closing-temuan`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return selesaiClosingTemuan(dataLha)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(dataLha)
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return selesaiClosingTemuan(dataLha)
       } else {
         throw new Error('Session expired, please login again.')
       }

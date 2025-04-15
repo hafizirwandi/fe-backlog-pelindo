@@ -5,8 +5,8 @@ import Temuan from '@views/hasil-auditor/Temuan'
 import { getServerMode } from '@core/utils/serverHelpers'
 
 export const metadata = {
-  title: 'Hasil Auditor',
-  description: 'Input Hasil Auditor'
+  title: 'Feedback Auditor',
+  description: 'Input Feedback Auditor'
 }
 
 const TemuanPage = async () => {

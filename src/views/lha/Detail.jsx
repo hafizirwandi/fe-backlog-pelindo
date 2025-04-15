@@ -54,9 +54,12 @@ import { useAuth } from '@/context/AuthContext'
 import CustomTextField from '@/@core/components/mui/TextField'
 import {
   acceptTemuan,
+  closingTemuan,
   generateTemuanPdf,
+  inputHasilAuditor,
   logTemuan,
   rejectTemuan,
+  selesaiClosingTemuan,
   selesaiInternalTemuan,
   sendTemuanPic,
   submitTemuan,
@@ -155,7 +158,10 @@ export default function DetailLha() {
   const [listLogTemuan, setListLogTemuan] = useState(null)
   const [openDialogLog, setOpenDialogLog] = useState(false)
   const [selesaiInternal, setSelesaiInternal] = useState(false)
+  const [selesaiClosing, setSelesaiClosing] = useState(false)
   const [expanded, setExpanded] = useState(null)
+  const [labelKonfirmasi, setLabelKonfirmasi] = useState(null)
+  const [labelTolak, setLabelTolak] = useState(null)
 
   const handleExpanded = panel => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : null)
@@ -259,6 +265,10 @@ export default function DetailLha() {
         res = await acceptTemuan(sendLha)
       }
 
+      if (selesaiClosing) {
+        res = await selesaiClosingTemuan(sendLha)
+      }
+
       if (res.status) {
         setOpenDialog(false)
 
@@ -332,6 +342,10 @@ export default function DetailLha() {
 
     try {
       let res = await rejectTemuan(sendLha)
+
+      if (selesaiClosing) {
+        res = await inputHasilAuditor(sendLha)
+      }
 
       if (res.status) {
         setOpenDialogTolak(false)
@@ -722,6 +736,37 @@ export default function DetailLha() {
                                       </>
                                     )
                                   },
+                                  row?.closing == 1 && {
+                                    label: 'Berita Acara',
+                                    value: (
+                                      <>
+                                        <ul style={{ margin: 0, padding: 0 }}>
+                                          {row.temuanHasFiles.map((item, index) => (
+                                            <li
+                                              key={index}
+                                              style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}
+                                            >
+                                              <span>
+                                                {index + 1}. {item.nama}
+                                              </span>
+                                              <Button
+                                                size='small'
+                                                color='primary'
+                                                variant='contained'
+                                                sx={{ mt: 1 }}
+                                                onClick={() =>
+                                                  window.open(item.url ?? '#', '_blank', 'noopener,noreferrer')
+                                                }
+                                                endIcon={<OpenInNew />}
+                                              >
+                                                Lihat File
+                                              </Button>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </>
+                                    )
+                                  },
                                   {
                                     label: 'Log',
                                     value: (
@@ -858,7 +903,7 @@ export default function DetailLha() {
                             </>
                           )}
 
-                          {row.last_stage === 5 && row.status >= 1 && (
+                          {row.last_stage >= 5 && row.status >= 1 && (
                             <Button
                               variant='contained'
                               fullWidth
@@ -909,6 +954,42 @@ export default function DetailLha() {
                                     setOpenDialogTolak(true)
                                     setTemuanId(row.id)
                                     setSelesaiInternal(true)
+                                  }}
+                                  sx={{ my: 1 }}
+                                >
+                                  Tolak
+                                </Button>
+                              </>
+                            )}
+
+                          {row.last_stage === 5 &&
+                            row.closing == 1 &&
+                            user?.permissions.includes('update selesai-internal') && (
+                              <>
+                                <Button
+                                  variant='contained'
+                                  fullWidth
+                                  color='success'
+                                  endIcon={<Check />}
+                                  onClick={() => {
+                                    setOpenDialog(true)
+                                    setTemuanId(row.id)
+                                    setSelesaiClosing(true)
+                                    setLabelKonfirmasi('Anda yakin ingin menyetujui closing temuan ini?')
+                                  }}
+                                >
+                                  Closing Temuan
+                                </Button>
+                                <Button
+                                  variant='contained'
+                                  fullWidth
+                                  color='error'
+                                  endIcon={<Clear />}
+                                  onClick={() => {
+                                    setOpenDialogTolak(true)
+                                    setTemuanId(row.id)
+                                    setSelesaiClosing(true)
+                                    setLabelTolak('Anda yakin ingin menolak closing temuan ini?')
                                   }}
                                   sx={{ my: 1 }}
                                 >
@@ -973,6 +1054,7 @@ export default function DetailLha() {
             })
             setOpenDialog(false)
             setTemuanId(null)
+            setLabelKonfirmasi(null)
           }}
           aria-describedby='dialog-konfirmasi-description'
           fullWidth={true}
@@ -981,7 +1063,7 @@ export default function DetailLha() {
           <DialogTitle>Konfirmasi</DialogTitle>
           <DialogContent>
             <Typography variant='h6' sx={{ my: 2 }}>
-              Anda yakin ingin meneruskan temuan ini?
+              {labelKonfirmasi ?? 'Anda yakin ingin meneruskan temuan ini?'}
             </Typography>
             <CustomTextField
               fullWidth
@@ -1044,6 +1126,7 @@ export default function DetailLha() {
             })
             setOpenDialog(false)
             setTemuanId(null)
+            setLabelTolak(null)
           }}
           aria-describedby='dialog-tolak-description'
           fullWidth={true}
@@ -1052,7 +1135,7 @@ export default function DetailLha() {
           <DialogTitle>Konfirmasi</DialogTitle>
           <DialogContent>
             <Typography variant='h6' sx={{ my: 2 }}>
-              And Yakin ingin menolak LHA ini?
+              {labelTolak ?? 'Anda yakin ingin menolak temuan ini?'}
             </Typography>
             <CustomTextField
               fullWidth
