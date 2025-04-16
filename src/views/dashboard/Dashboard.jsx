@@ -18,12 +18,29 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Card,
+  CardActions,
+  CardContent,
+  Button
 } from '@mui/material'
-import { Checklist, AssignmentTurnedIn, BugReport, ReportProblem, Info } from '@mui/icons-material'
+import {
+  Checklist,
+  AssignmentTurnedIn,
+  BugReport,
+  ReportProblem,
+  Info,
+  Print,
+  SignalCellularNullOutlined
+} from '@mui/icons-material'
+
+import { DataGrid } from '@mui/x-data-grid'
+import Swal from 'sweetalert2'
 
 import { dashboardSummary, logStage } from '@/utils/statistik'
 import LhaSelect from '@/components/LhaSelect'
+import { detailsLha } from '@/utils/lha'
+import { generateMonitoringPdf } from '@/utils/temuan'
 
 const activityLogs = [
   { message: 'Menambahkan temuan baru', user: 'Budi', timestamp: '2025-04-08 10:32' },
@@ -35,6 +52,9 @@ export default function AuditDashboard() {
   const [stats, setStats] = useState([])
   const [progress, setProgress] = useState(0)
   const [activity, setActivity] = useState([])
+  const [summaryLHA, setSummaryLHA] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [lhaId, setLhaId] = useState(null)
 
   const fetchData = async lha_id => {
     let data = []
@@ -93,15 +113,99 @@ export default function AuditDashboard() {
     fetchDataActivity()
   }, [])
 
+  const columns = [
+    { field: 'nama_divisi', headerName: 'BIDANG', flex: 1 },
+    { field: 'jumlah_temuan', headerName: 'JUMLAH TEMUAN', flex: 1, align: 'center', headerAlign: 'center' },
+    { field: 'jumlah_rekomendasi', headerName: 'JUMLAH REKOMENDASI', flex: 1, align: 'center', headerAlign: 'center' },
+    { field: 'sesuai', headerName: 'SESUAI', flex: 1, align: 'center', headerAlign: 'center' },
+    { field: 'bs', headerName: 'BELUM SESUAI (BS)', flex: 1, align: 'center', headerAlign: 'center' },
+    { field: 'bd', headerName: 'BELUM DITINDAKLANJUTI (BD)', flex: 1, align: 'center', headerAlign: 'center' },
+    { field: 'tptd', headerName: 'TPTD', flex: 1, align: 'center', headerAlign: 'center' }
+  ]
+
+  const fetchSummaryLHA = async lha_id => {
+    let data = await detailsLha(lha_id)
+
+    if (data.status) {
+      const result = []
+
+      Object.values(data.data.temuan).forEach((temuanDivisi, index) => {
+        let jumlahTemuan = temuanDivisi.data.length
+        let jumlahRekomendasi = 0
+        let sesuai = 0
+        let bs = 0
+        let bd = 0
+        let tptd = 0
+
+        temuanDivisi.data.forEach(temuan => {
+          temuan.rekomendasi.forEach(rekom => {
+            jumlahRekomendasi++
+
+            switch (parseInt(rekom.status)) {
+              case 2:
+                sesuai++
+                break
+              case 1:
+                bs++
+                break
+              case 0:
+                bd++
+                break
+              case 3:
+                tptd++
+                break
+            }
+          })
+        })
+
+        result.push({
+          id: index + 1,
+          nama_divisi: temuanDivisi.nama_divisi.toUpperCase(),
+          jumlah_temuan: jumlahTemuan,
+          jumlah_rekomendasi: jumlahRekomendasi,
+          sesuai,
+          bs,
+          bd,
+          tptd
+        })
+      })
+
+      setSummaryLHA(result)
+    }
+  }
+
   const [selectedLHA, setSelectedLHA] = useState('')
 
   const handleLha = value => {
     let id = value ? value.id : null
 
+    setLhaId(id)
+
     setSelectedLHA(id)
 
     fetchData(id)
     fetchDataActivity(id)
+    fetchSummaryLHA(id)
+  }
+
+  const handleCetakMonitoring = async () => {
+    setLoading(true)
+
+    try {
+      const blob = await generateMonitoringPdf(lhaId)
+
+      const pdfUrl = window.URL.createObjectURL(blob)
+
+      window.open(pdfUrl, '_blank')
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -150,6 +254,41 @@ export default function AuditDashboard() {
       </Grid>
 
       <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Card>
+            <CardActions>
+              <Grid container alignItems='center'>
+                <Grid item xs={6}>
+                  <Typography variant='h5'>Monitoring LHA</Typography>
+                </Grid>
+                <Grid item xs={6} display='flex' justifyContent='flex-end'>
+                  {summaryLHA.length !== 0 && (
+                    <Button variant='contained' color='info' endIcon={<Print />} onClick={handleCetakMonitoring}>
+                      Cetak Monitoring
+                    </Button>
+                  )}
+                </Grid>
+              </Grid>
+            </CardActions>
+            <CardContent>
+              <DataGrid
+                rows={summaryLHA}
+                columns={columns}
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
+                sx={{
+                  '& .MuiDataGrid-columnHeaders': {
+                    backgroundColor: '#87CEEB',
+                    fontWeight: 'bold'
+                  },
+                  '& .MuiDataGrid-cell': {
+                    textAlign: 'center'
+                  }
+                }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3, borderRadius: 4, backgroundColor: '#f0f4ff' }}>
             <Typography variant='h6' gutterBottom fontWeight='medium'>
@@ -172,7 +311,6 @@ export default function AuditDashboard() {
             />
           </Paper>
         </Grid>
-
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3, borderRadius: 4 }}>
             <Typography variant='h6' gutterBottom fontWeight='medium'>
