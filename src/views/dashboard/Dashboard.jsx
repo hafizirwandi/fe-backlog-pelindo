@@ -124,6 +124,12 @@ export default function AuditDashboard() {
   ]
 
   const fetchSummaryLHA = async lha_id => {
+    if (lha_id === null) {
+      setSummaryLHA([])
+
+      return
+    }
+
     let data = await detailsLha(lha_id)
 
     if (data.status) {

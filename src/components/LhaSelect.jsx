@@ -83,8 +83,13 @@ export default function LhaSelect({ value, onSelect, disabled }) {
       getOptionLabel={option => `${option.judul}`}
       options={options}
       loading={loading}
-      onChange={(_, newValue) => {
+      onChange={async (_, newValue) => {
         setSelectedValue(newValue)
+
+        if (newValue === null) {
+          // Jika tombol "X" ditekan, fetch ulang data
+          await fetchData('')
+        }
 
         if (onSelect) {
           onSelect(newValue)
