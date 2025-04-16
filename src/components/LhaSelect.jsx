@@ -70,7 +70,13 @@ export default function LhaSelect({ value, onSelect, disabled }) {
       disabled={disabled}
       open={open}
       value={selectedValue}
-      onOpen={() => setOpen(true)}
+      onOpen={async () => {
+        setOpen(true)
+
+        if (options.length === 0) {
+          await fetchData('') // Memanggil fetchData saat dropdown dibuka
+        }
+      }}
       onClose={() => setOpen(false)}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
       isOptionEqualToValue={(option, value) => option.id === value.id}
