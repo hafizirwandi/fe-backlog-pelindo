@@ -55,6 +55,7 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import {
   acceptTemuan,
   closingTemuan,
+  generateMonitoringPdf,
   generateTemuanPdf,
   inputHasilAuditor,
   logTemuan,
@@ -162,6 +163,9 @@ export default function DetailLha() {
   const [expanded, setExpanded] = useState(null)
   const [labelKonfirmasi, setLabelKonfirmasi] = useState(null)
   const [labelTolak, setLabelTolak] = useState(null)
+
+  const params = useParams()
+  const lhaId = params.id
 
   const handleExpanded = panel => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : null)
@@ -591,6 +595,26 @@ export default function DetailLha() {
     }
   }
 
+  const handleCetakMonitoring = async () => {
+    setLoading(true)
+
+    try {
+      const blob = await generateMonitoringPdf(lhaId)
+
+      const pdfUrl = window.URL.createObjectURL(blob)
+
+      window.open(pdfUrl, '_blank')
+    } catch (error) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: error || 'Terjadi kesalahan',
+        icon: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       <Grid container spacing={2} sx={{ mt: 5, mb: 5 }}>
@@ -608,6 +632,17 @@ export default function DetailLha() {
                       onClick={() => setOpenDialog(true)}
                     >
                       Kirim
+                    </Button>
+                  )}
+
+                  {dataLha?.last_stage == 2 && (
+                    <Button
+                      variant='contained'
+                      color='info'
+                      endIcon={<Print />}
+                      onClick={() => handleCetakMonitoring()}
+                    >
+                      Cetak Monitoring
                     </Button>
                   )}
                 </Box>

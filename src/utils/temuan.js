@@ -987,3 +987,47 @@ export const selesaiClosingTemuan = async dataLha => {
     }
   }
 }
+
+export const generateMonitoringPdf = async id => {
+  try {
+    const token = Cookies.get('token')
+
+    let urlRequest = `${url}v1/cetak/monitoring/${id}`
+
+    if (!token) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return generateMonitoringPdf(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    const response = await fetch(urlRequest, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    })
+
+    if (response.status === 401) {
+      const refreshSuccess = await refreshToken()
+
+      if (refreshSuccess) {
+        return generateMonitoringPdf(id)
+      } else {
+        throw new Error('Session expired, please login again.')
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error('Gagal mendapatkan PDF')
+    }
+
+    const blob = await response.blob()
+
+    return blob
+  } catch (error) {
+    console.error('Error dalam generatePdf:', error)
+    throw error
+  }
+}
